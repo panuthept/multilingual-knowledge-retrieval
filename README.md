@@ -1,4 +1,4 @@
-# multilingual-knowledge-retrieval
+# Multilingual Knowledge Retrieval (mKR)
 
 # Installation
 ```
