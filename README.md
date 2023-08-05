@@ -17,7 +17,7 @@ python demo.py --query_file ./data/demo_queries.jsonl --doc_file ./data/demo_doc
 # Results
 NOTE: [✅] means the document is relevant, [❌] means the document is not relevant.
 
-Disclaimer: This demo only has 13 documents, so it is very likely that the relevant documents will be in the top 3.
+Disclaimer: This demo only has 14 documents, so it is very likely that the relevant documents will be in the top 3.
 ## Query: ลุงตู่ (ประยุทธ์) ทำอาชีพอะไร
 ### Top 3 documents
 ### [❌] Score: 0.1654      Document[1]: นักการเมือง, ผู้นำทางการเมืองหรือบุคคลทางการเมือง (อังกฤษ: politician มาจากภาษากรีกโบราณ polis ที่แปลว่า "เมือง") เป็นบุคคลผู้เกี่ยวข้องกับการมีอิทธิพลต่อนโยบายสาธารณะและการวินิจฉัยสั่งการ ซึ่งรวมผู้ดำรงตำแหน่งวินิจฉัยสั่งการในรัฐบาล และผู้ที่มุ่งดำรงตำแหน่งเหล่านั้น ไม่ว่าด้วยวิธีการเลือกตั้ง การสืบทอด รัฐประหาร การแต่งตั้ง การพิชิต หรือวิธีอื่น การเมืองไม่ใช่จำกัดอยู่เพียงวิธีการปกครองผ่านตำแหน่งสาธารณะเท่านั้น ตำแหน่งทางการเมืองอาจถืออยู่ใน
