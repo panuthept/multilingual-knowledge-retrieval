@@ -11,7 +11,13 @@ pip install -e .
 
 # Running demo
 ```
-python demo.py --query_file ./data/demo_queries.jsonl --doc_file ./data/demo_docs.jsonl --qrel_file ./data/demo_qrels.jsonl --index_file ./data/demo_doc_embs.npy --top_k 3
+python demo.py \
+--query_file ./data/demo_queries.jsonl \
+--doc_file ./data/demo_docs.jsonl \
+--qrel_file ./data/demo_qrels.jsonl \
+--index_file ./data/demo_doc_embs.npy \
+--top_k 3 \
+--encoder mUSE
 ```
 
 # Results
