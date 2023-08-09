@@ -10,6 +10,9 @@ pip install -e .
 conda install -c conda-forge faiss-cpu
 ```
 
+# Downloading pre-trained models
+Due to some unknown reasons, the pre-trained models cannot be downloaded by code. Please create a `models` folder and manually download the pre-trained model (mUSE) from the following links (https://tfhub.dev/google/universal-sentence-encoder-multilingual/3) and put it in the folder as `models/universal-sentence-encoder-multilingual_3`.
+
 # Running demo (mUSE Dense Retrieval)
 ```
 python demo_dense_retrieval.py \
