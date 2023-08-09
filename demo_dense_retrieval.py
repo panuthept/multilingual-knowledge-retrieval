@@ -1,7 +1,7 @@
 import json
 import argparse
 
-from mkr.retrievers.sparse_retriever import BM25SparseRetriever, BM25Config
+from mkr.retrievers.dense_retriever import DenseRetriever, EncoderConfig
 
 
 if __name__ == "__main__":
@@ -10,22 +10,22 @@ if __name__ == "__main__":
     parser.add_argument("--query_file", required=True, type=str, help="Query file with questions")
     parser.add_argument("--doc_file", required=True, type=str, help="Document file with sentences to encode")
     parser.add_argument("--qrel_file", required=True, type=str, help="Query relevance file")
-    parser.add_argument("--index_file", required=True, type=str, help="Index file")
+    parser.add_argument("--index_file", required=True, type=str, help="Index file with encoded sentences")
+    parser.add_argument("--batch_size", default=32, type=int, help="Batch size for encoding")
     parser.add_argument("--top_k", default=3, type=int, help="Retrieve top k documents")
-    parser.add_argument("--model_name", default="bm25_okapi", type=str, help="BM25 to use")
-    parser.add_argument("--tokenizer_name", default="newmm", type=str, help="Tokenizer to use")
+    parser.add_argument("--model_name", default="mUSE", type=str, help="Encoder to use")
     args = parser.parse_args()
 
     # Prepare retriever
-    doc_retriever = BM25SparseRetriever(
-        config=BM25Config(
+    doc_retriever = DenseRetriever(
+        config=EncoderConfig(
             model_name=args.model_name,
-            tokenizer_name=args.tokenizer_name,
             corpus_dir=args.doc_file,
+            batch_size=args.batch_size,
         )
     )
     doc_retriever.save_index(args.index_file)
-    # doc_retriever = BM25SparseRetriever.from_indexed(args.index_file)
+    # doc_retriever = DenseRetriever.from_indexed(args.index_file)
 
     # Load queries
     queries = []

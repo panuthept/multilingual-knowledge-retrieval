@@ -39,6 +39,8 @@ class BM25SparseRetriever:
             index = BM25Plus(tokenized_corpus)
         elif self.model_name == "bm25_l":
             index = BM25L(tokenized_corpus)
+        else:
+            raise ValueError(f"Unknown BM25 model: {self.model_name}")
         return index
     
     def save_index(self, index_dir: str):
@@ -55,17 +57,20 @@ class BM25SparseRetriever:
         }
         json.dump(config, open(os.path.join(index_dir, "config.json"), "w"))
 
-    def __call__(self, query: str, top_k: int = 3):
-        # Tokenize query
-        tokenized_query = word_tokenize(query, engine=self.tokenizer_name)
-        # Retrieve documents
-        scores = self.index.get_scores(tokenized_query)
-        sorted_scores = np.argsort(scores)[::-1]
-        # Get top-k results
-        returns = []
-        for idx in sorted_scores[:top_k]:
-            returns.append({"doc_id": idx, "doc_text": self.corpus[idx], "score": scores[idx]})
-        return returns
+    def __call__(self, queries: List[str], top_k: int = 3):
+        resultss = []
+        for query in queries:
+            # Tokenize query
+            tokenized_query = word_tokenize(query, engine=self.tokenizer_name)
+            # Retrieve documents
+            scores = self.index.get_scores(tokenized_query)
+            sorted_scores = np.argsort(scores)[::-1]
+            # Get top-k results
+            results = []
+            for idx in sorted_scores[:top_k]:
+                results.append({"doc_id": idx, "doc_text": self.corpus[idx], "score": scores[idx]})
+            resultss.append(results)
+        return resultss
 
     @classmethod
     def from_indexed(cls, index_dir: str):

@@ -10,10 +10,11 @@ from mkr.encoders.baseclass import SentenceEncoderBase
 
 class mUSESentenceEncoder(SentenceEncoderBase):
     def __init__(self):
-        self.model = tensorflow_hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual/3")
+        # self.model = tensorflow_hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual/3")
+        self.model = tensorflow_hub.load("./models/universal-sentence-encoder-multilingual_3")
 
     def encode(self, text: str):
-        return self.model(text)
+        return self.model(text).numpy()
 
     def encode_batch(self, texts: List[str], batch_size: Optional[int] = 32):
         results = []
@@ -22,7 +23,7 @@ class mUSESentenceEncoder(SentenceEncoderBase):
             batch_texts = texts[batch_idx * batch_size: (batch_idx + 1) * batch_size]
             results.append(self.model(batch_texts))
         results = tf.concat(results, axis=0)
-        return results
+        return results.numpy()
     
 
 if __name__ == "__main__":
