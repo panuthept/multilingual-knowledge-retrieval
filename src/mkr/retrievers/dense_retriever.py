@@ -1,8 +1,10 @@
 import os
+import math
 import json
 import faiss
 import pickle
 
+from tqdm import trange
 from faiss import IndexFlat
 from dataclasses import dataclass
 from typing import List, Dict, Optional
@@ -39,12 +41,16 @@ class DenseRetriever:
         return encoder
 
     def _create_index(self, corpus: List[Dict[str, str]], batch_size: int = 32):
-        doc_texts = [doc["doc_text"] for doc in corpus]
-        corpus_embeddings = self.encoder.encode_batch(doc_texts, batch_size=batch_size)
-        embeddings_dim = corpus_embeddings.shape[-1]
-        # Create FAISS index
-        index = faiss.IndexFlatIP(embeddings_dim)
-        index.add(corpus_embeddings)
+        index = None
+        for batch_idx in trange(math.ceil(len(corpus) / batch_size)):
+            batch = corpus[batch_idx * batch_size: (batch_idx + 1) * batch_size]
+            doc_texts = [doc["doc_text"] for doc in batch]
+            corpus_embeddings = self.encoder.encode_batch(doc_texts, batch_size=batch_size)
+            if index is None:
+                # Create FAISS index
+                embeddings_dim = corpus_embeddings.shape[-1]
+                index = faiss.IndexFlatIP(embeddings_dim)
+            index.add(corpus_embeddings)
         return index
     
     def save_index(self, index_dir: str):
