@@ -4,8 +4,8 @@ import faiss
 import pickle
 
 from faiss import IndexFlat
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import List, Dict, Optional
 from mkr.encoders.mUSE import mUSESentenceEncoder
 from mkr.utilities.general_utils import read_corpus
 
@@ -38,8 +38,9 @@ class DenseRetriever:
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder
 
-    def _create_index(self, corpus: List[str], batch_size: int = 32):
-        corpus_embeddings = self.encoder.encode_batch(corpus, batch_size=batch_size)
+    def _create_index(self, corpus: List[Dict[str, str]], batch_size: int = 32):
+        doc_texts = [doc["doc_text"] for doc in corpus]
+        corpus_embeddings = self.encoder.encode_batch(doc_texts, batch_size=batch_size)
         embeddings_dim = corpus_embeddings.shape[-1]
         # Create FAISS index
         index = faiss.IndexFlatIP(embeddings_dim)
@@ -69,7 +70,9 @@ class DenseRetriever:
         for scores, indices in zip(scoress, indicess):
             results = []
             for idx, score in zip(indices, scores):
-                results.append({"doc_id": idx, "doc_text": self.corpus[idx], "score": score})
+                result = self.corpus[idx].copy()
+                result["score"] = score
+                results.append(result)
             resultss.append(results)
         return resultss
 

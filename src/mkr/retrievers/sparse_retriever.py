@@ -3,8 +3,8 @@ import json
 import pickle
 import numpy as np
 
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import List, Dict, Optional
 from pythainlp.tokenize import word_tokenize
 from mkr.utilities.general_utils import read_corpus
 from rank_bm25 import BM25Okapi, BM25Plus, BM25L, BM25
@@ -29,9 +29,10 @@ class BM25SparseRetriever:
         if self.index is None:
             self.index = self._create_index(self.corpus)
 
-    def _create_index(self, corpus: List[str]):
+    def _create_index(self, corpus: List[Dict[str, str]]):
         # Tokenize corpus
-        tokenized_corpus = [word_tokenize(doc, engine=self.tokenizer_name) for doc in corpus]
+        doc_texts = [doc["doc_text"] for doc in corpus]
+        tokenized_corpus = [word_tokenize(doc_text, engine=self.tokenizer_name) for doc_text in doc_texts]
         # Create index
         if self.model_name == "bm25_okapi":
             index = BM25Okapi(tokenized_corpus)
@@ -68,7 +69,9 @@ class BM25SparseRetriever:
             # Get top-k results
             results = []
             for idx in sorted_scores[:top_k]:
-                results.append({"doc_id": idx, "doc_text": self.corpus[idx], "score": scores[idx]})
+                result = self.corpus[idx].copy()
+                result["score"] = scores[idx]
+                results.append(result)
             resultss.append(results)
         return resultss
 
