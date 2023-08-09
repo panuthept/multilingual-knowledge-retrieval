@@ -24,6 +24,8 @@ if __name__ == "__main__":
             corpus_dir=args.doc_file,
         )
     )
+    doc_retriever.save_index(args.index_file)
+    # doc_retriever = BM25SparseRetriever.from_indexed(args.index_file)
 
     # Load queries
     queries = []

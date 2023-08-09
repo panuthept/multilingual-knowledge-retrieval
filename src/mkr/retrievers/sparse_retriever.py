@@ -68,7 +68,7 @@ class BM25SparseRetriever:
         return returns
 
     @classmethod
-    def from_preindexed(cls, index_dir: str):
+    def from_indexed(cls, index_dir: str):
         # Check if index_dir exists
         assert os.path.exists(index_dir), f"Index directory not found: {index_dir}"
         # Check if relevant files exist
@@ -78,7 +78,7 @@ class BM25SparseRetriever:
         # Load index
         index = pickle.load(open(os.path.join(index_dir, "index.pkl"), "rb"))
         # Load config
-        config = json.load(open(os.path.join(index_dir, "config.json"), "r"))
+        config = BM25Config(**json.load(open(os.path.join(index_dir, "config.json"), "r")))
         return cls(
             config=config,
             index=index,
