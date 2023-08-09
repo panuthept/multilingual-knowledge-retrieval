@@ -6,6 +6,7 @@ import numpy as np
 from typing import List, Optional
 from dataclasses import dataclass
 from pythainlp.tokenize import word_tokenize
+from mkr.utilities.general_utils import read_corpus
 from rank_bm25 import BM25Okapi, BM25Plus, BM25L, BM25
 
 
@@ -22,20 +23,11 @@ class BM25SparseRetriever:
         self.tokenizer_name = config.tokenizer_name
         self.corpus_dir = config.corpus_dir
 
-        self.corpus = self._read_corpus(self.corpus_dir)
+        self.corpus = read_corpus(self.corpus_dir)
 
         self.index = index
         if self.index is None:
             self.index = self._create_index(self.corpus)
-
-    @staticmethod
-    def _read_corpus(corpus_dir: str):
-        corpus: List[str] = []
-        with open(corpus_dir, "r", encoding="utf-8") as f:
-            for line in f:
-                data = json.loads(line)
-                corpus.append(data["doc_text"])
-        return corpus
 
     def _create_index(self, corpus: List[str]):
         # Tokenize corpus
