@@ -1,16 +1,16 @@
 import math
-import tensorflow_hub
 import tensorflow_text  # Used by the mUSE model
 import tensorflow as tf
 
 from typing import List, Optional
 from mkr.encoders.baseclass import SentenceEncoderBase
+from mkr.resources.resource_manager import ResourceManager
 
 
 class mUSESentenceEncoder(SentenceEncoderBase):
     def __init__(self):
-        # self.model = tensorflow_hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual/3")
-        self.model = tensorflow_hub.load("./models/universal-sentence-encoder-multilingual_3")
+        self.resource_manager = ResourceManager()
+        self.model = self.resource_manager.get_encoder("mUSE")
 
     def encode(self, text: str):
         return self.model(text).numpy()
