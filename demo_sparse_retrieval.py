@@ -1,42 +1,39 @@
 import json
 import argparse
-
 from mkr.retrievers.sparse_retriever import BM25SparseRetriever, BM25Config
 
 
 if __name__ == "__main__":
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--query_file", required=True, type=str, help="Query file with questions")
-    parser.add_argument("--doc_file", required=True, type=str, help="Document file with sentences to encode")
-    parser.add_argument("--qrel_file", required=True, type=str, help="Query relevance file")
-    parser.add_argument("--index_file", required=True, type=str, help="Index file")
     parser.add_argument("--top_k", default=3, type=int, help="Retrieve top k documents")
     parser.add_argument("--model_name", default="bm25_okapi", type=str, help="BM25 to use")
     parser.add_argument("--tokenizer_name", default="newmm", type=str, help="Tokenizer to use")
     args = parser.parse_args()
+
+    corpus_dir = "./demo_data/demo_docs.jsonl"
+    queries_dir = "./demo_data/demo_queries.jsonl"
+    qrels_dir = "./demo_data/demo_qrels.jsonl"
 
     # Prepare retriever
     doc_retriever = BM25SparseRetriever(
         config=BM25Config(
             model_name=args.model_name,
             tokenizer_name=args.tokenizer_name,
-            corpus_dir=args.doc_file,
+            corpus_dir=corpus_dir,
         )
     )
-    doc_retriever.save_index(args.index_file)
-    # doc_retriever = BM25SparseRetriever.from_indexed(args.index_file)
 
     # Load queries
     queries = []
-    with open(args.query_file, "r", encoding="utf-8") as f:
+    with open(queries_dir, "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
             queries.append(data["query_text"])
 
     # Load qrels
     qrels = {}
-    with open(args.qrel_file, "r", encoding="utf-8") as f:
+    with open(qrels_dir, "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
             qrels[data["query_id"]] = data["doc_ids"]
