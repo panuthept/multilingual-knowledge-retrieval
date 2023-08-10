@@ -1,4 +1,5 @@
 import math
+import tensorflow_hub
 import tensorflow_text  # Used by the mUSE model
 import tensorflow as tf
 
@@ -10,7 +11,7 @@ from mkr.resources.resource_manager import ResourceManager
 class mUSESentenceEncoder(SentenceEncoderBase):
     def __init__(self):
         self.resource_manager = ResourceManager()
-        self.model = self.resource_manager.get_encoder("mUSE")
+        self.model = tensorflow_hub.load(self.resource_manager.get_encoder_path("mUSE"))
 
     def encode(self, text: str):
         return self.model(text).numpy()
