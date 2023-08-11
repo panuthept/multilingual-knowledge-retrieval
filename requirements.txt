@@ -5,3 +5,4 @@ gdown
 streamlit
 faiss-cpu
 pythainlp
+.
