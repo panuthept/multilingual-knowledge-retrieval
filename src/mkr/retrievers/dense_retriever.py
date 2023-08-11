@@ -75,10 +75,15 @@ class DenseRetriever(Retriever):
         resultss = []
         for scores, indices in zip(scoress, indicess):
             results = []
+            sum_score = 0.0 # for normalization
             for idx, score in zip(indices, scores):
                 result = self.corpus[idx].copy()
                 result["score"] = score
+                sum_score += score
                 results.append(result)
+            # Normalize scores
+            for result in results:
+                result["score"] /= sum_score
             resultss.append(results)
         return resultss
 
