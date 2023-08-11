@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 
-# with open("requirements.txt") as f:
-#     dependencies = [line for line in f]
+with open("requirements.txt") as f:
+    dependencies = [line for line in f][:-1]
 
 setup(
     name='mkr',
@@ -14,5 +14,5 @@ setup(
     author_email='panuthep.t_s20@vistec.ac.th',
     description='Multilingual Knowledge Retrieval',
     python_requires='>=3.7',
-    # install_requires=dependencies
+    install_requires=dependencies
 )
