@@ -5,4 +5,4 @@ gdown
 streamlit
 faiss-cpu
 pythainlp
-https://github.com/panuthept/multilingual-knowledge-retrieval.git
+git+https://github.com/panuthept/multilingual-knowledge-retrieval.git#egg=multilingualknowledgeretrieval
