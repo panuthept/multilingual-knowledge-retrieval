@@ -4,3 +4,4 @@ tensorflow-text
 gdown
 streamlit
 faiss-cpu
+pythainlp
