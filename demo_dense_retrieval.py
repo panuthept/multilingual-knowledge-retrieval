@@ -1,4 +1,3 @@
-import os
 import json
 import argparse
 from mkr.retrievers.dense_retriever import DenseRetriever, EncoderConfig
