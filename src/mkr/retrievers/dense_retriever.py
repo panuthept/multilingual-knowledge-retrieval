@@ -3,11 +3,11 @@ import math
 import json
 import faiss
 import pickle
-
 from tqdm import trange
 from faiss import IndexFlat
 from dataclasses import dataclass
 from typing import List, Dict, Optional
+from mkr.retrievers.baseclass import Retriever
 from mkr.encoders.mUSE import mUSESentenceEncoder
 from mkr.utilities.general_utils import read_corpus
 
@@ -19,7 +19,7 @@ class EncoderConfig:
     batch_size: int = 32
 
 
-class DenseRetriever:
+class DenseRetriever(Retriever):
     def __init__(self, config: EncoderConfig, index: Optional[IndexFlat] = None):        
         self.model_name = config.model_name
         self.corpus_dir = config.corpus_dir

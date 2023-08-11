@@ -15,6 +15,20 @@ CORPUS_COLLECTION = {
         "download_url": "https://drive.google.com/uc?id=1GtoAS1QCMLOxuE2zva8uGoF9U_XlASei",
         "download_output": "wikipedia_th.jsonl",
         "zip_file": False,
+    },
+    "wikipedia_th_v2": {
+        "local_dir": "corpus",
+        "file_name": "wikipedia_th_v2.jsonl",
+        "download_url": "https://drive.google.com/uc?id=1F7EyG4pzvVLSC4bubbAN1c6sAQ00PZQK",
+        "download_output": "wikipedia_th_v2.jsonl.zip",
+        "zip_file": True,
+    },
+    "wikipedia_th_v2_raw": {
+        "local_dir": "corpus",
+        "file_name": "thaiwikipedia_v2.csv",
+        "download_url": "https://drive.google.com/uc?id=1lkMQ189Xq1csyBJN9HmMJV3FMAwTjAb4",
+        "download_output": "thaiwikipedia_v2.csv.zip",
+        "zip_file": True,
     }
 }
 
@@ -31,6 +45,20 @@ INDEX_COLLECTION = {
         "file_name": "wikipedia_th_mUSE",
         "download_url": "https://drive.google.com/uc?id=1KF63e784iEmuGycw1GFH6qi1aXwrsQSQ",
         "download_output": "wikipedia_th_mUSE.zip",
+        "zip_file": True,
+    },
+    "wikipedia_th_v2_bm25_okapi_newmm": {
+        "local_dir": "indexes",
+        "file_name": "wikipedia_th_v2_bm25_okapi_newmm",
+        "download_url": "https://drive.google.com/uc?id=1K7AKYyqktabUd8CLiVsSJ1yDqwwE81SE",
+        "download_output": "wikipedia_th_v2_bm25_okapi_newmm.zip",
+        "zip_file": True,
+    },
+    "wikipedia_th_v2_mUSE": {
+        "local_dir": "indexes",
+        "file_name": "wikipedia_th_v2_mUSE",
+        "download_url": "https://drive.google.com/uc?id=1LqAUud4wUXnERXD3rjlpPCg-L7gs5Uja",
+        "download_output": "wikipedia_th_v2_mUSE.zip",
         "zip_file": True,
     }
 }

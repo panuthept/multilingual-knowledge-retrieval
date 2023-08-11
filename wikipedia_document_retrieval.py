@@ -1,6 +1,7 @@
 import os
 import argparse
 from mkr.resources.resource_manager import ResourceManager
+from mkr.retrievers.document_retriever import DocumentRetriever
 from mkr.retrievers.dense_retriever import DenseRetriever, EncoderConfig
 
 
@@ -20,15 +21,16 @@ if __name__ == "__main__":
 
     # Prepare retriever
     if os.path.exists(index_path):
-        doc_retriever = DenseRetriever.from_indexed(index_path)
+        retriever = DenseRetriever.from_indexed(index_path)
     else:
-        doc_retriever = DenseRetriever(
+        retriever = DenseRetriever(
             config=EncoderConfig(
                 model_name=args.model_name,
                 corpus_dir=corpus_path,
             )
         )
-        doc_retriever.save_index(index_path)
+        retriever.save_index(index_path)
+    doc_retriever = DocumentRetriever(retriever)
 
     # Load queries
     queries = [args.query]
