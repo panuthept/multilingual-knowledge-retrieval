@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 with open("requirements.txt") as f:
-    dependencies = [line for line in f][:-1]
+    dependencies = [line for line in f]
 
 setup(
     name='mkr',

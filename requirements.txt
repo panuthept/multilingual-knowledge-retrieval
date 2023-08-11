@@ -6,4 +6,3 @@ streamlit
 faiss-cpu
 pythainlp
 rank_bm25
-git+https://github.com/panuthept/multilingual-knowledge-retrieval.git#egg=mkr
