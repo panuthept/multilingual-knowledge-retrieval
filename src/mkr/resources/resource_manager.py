@@ -30,8 +30,9 @@ class ResourceManager:
             shutil.unpack_archive(download_output, local_dir)
             os.remove(download_output)
 
-    def get_corpus_path(self, corpus_name: str, force_download: bool = False):
-        self.download_resource_if_needed(CORPUS_COLLECTION[corpus_name], force_download=force_download)
+    def get_corpus_path(self, corpus_name: str, download: bool = True, force_download: bool = False):
+        if download:
+            self.download_resource_if_needed(CORPUS_COLLECTION[corpus_name], force_download=force_download)
 
         if corpus_name in CORPUS_COLLECTION:
             resource_details = CORPUS_COLLECTION[corpus_name]
@@ -42,8 +43,9 @@ class ResourceManager:
             raise ValueError(f"Unknown corpus: {corpus_name}")
         return corpus_path
 
-    def get_encoder_path(self, encoder_name: str, force_download: bool = False):
-        self.download_resource_if_needed(ENCODER_COLLECTION[encoder_name], force_download=force_download)
+    def get_encoder_path(self, encoder_name: str, download: bool = True, force_download: bool = False):
+        if download:
+            self.download_resource_if_needed(ENCODER_COLLECTION[encoder_name], force_download=force_download)
 
         if encoder_name in ENCODER_COLLECTION:
             resource_details = ENCODER_COLLECTION[encoder_name]
@@ -54,8 +56,9 @@ class ResourceManager:
             raise ValueError(f"Unknown encoder: {encoder_name}")
         return encoder_path
 
-    def get_index_path(self, index_name: str, force_download: bool = False):
-        self.download_resource_if_needed(INDEX_COLLECTION[index_name], force_download=force_download)
+    def get_index_path(self, index_name: str, download: bool = True, force_download: bool = False):
+        if download:
+            self.download_resource_if_needed(INDEX_COLLECTION[index_name], force_download=force_download)
 
         if index_name in INDEX_COLLECTION:
             resource_details = INDEX_COLLECTION[index_name]

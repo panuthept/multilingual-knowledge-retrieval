@@ -2,10 +2,10 @@ import os
 import json
 import pickle
 import numpy as np
-
 from dataclasses import dataclass
 from typing import List, Dict, Optional
 from pythainlp.tokenize import word_tokenize
+from mkr.retrievers.baseclass import Retriever
 from mkr.utilities.general_utils import read_corpus
 from rank_bm25 import BM25Okapi, BM25Plus, BM25L, BM25
 
@@ -17,7 +17,7 @@ class BM25Config:
     corpus_dir: str
 
 
-class BM25SparseRetriever:
+class BM25SparseRetriever(Retriever):
     def __init__(self, config: BM25Config, index: Optional[BM25] = None):        
         self.model_name = config.model_name
         self.tokenizer_name = config.tokenizer_name
