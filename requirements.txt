@@ -3,3 +3,4 @@ tensorflow-hub
 tensorflow-text
 gdown
 streamlit
+faiss-cpu
