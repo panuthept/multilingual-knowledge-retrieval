@@ -67,7 +67,7 @@ if st.session_state.response is not None:
     for result in results:
         url = result["url"]
         title = result["title"]
-        content = st.session_state.corpus[st.session_state.corpus["title"] == title]["text"].values[0]
+        content = result["content"]
         content = " ".join(word_tokenize(content)[:200])
         st.markdown(f"#### [{title}]({url})")
         st.markdown(content)
