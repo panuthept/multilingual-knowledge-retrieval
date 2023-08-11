@@ -17,7 +17,6 @@ if "init" not in st.session_state:
     st.session_state.resource_manager = ResourceManager(force_download=False)
     st.session_state.retriever: Retriever = DenseRetriever.from_indexed(st.session_state.resource_manager.get_index_path(f"wikipedia_th_v2_mUSE"))
     st.session_state.doc_retriever: DocumentRetriever = DocumentRetriever(st.session_state.retriever)
-    st.session_state.corpus = pd.read_csv(st.session_state.resource_manager.get_corpus_path("wikipedia_th_v2_raw"))
     st.session_state.response: List[Dict[str, str]] = None
     
     st.session_state.current_retriever: str = "Dense retrieval"
