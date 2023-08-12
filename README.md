@@ -26,4 +26,4 @@ python download_resources.py
 ```
 streamlit run demo_app.py
 ```
-![](/demo_result.png)
+![](/app_screenshot.png)
