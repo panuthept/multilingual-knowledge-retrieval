@@ -5,9 +5,9 @@ import numpy as np
 from dataclasses import dataclass
 from typing import List, Dict, Optional
 from pythainlp.tokenize import word_tokenize
-from mkr.retrievers.baseclass import Retriever
-from mkr.utilities.general_utils import read_corpus
 from rank_bm25 import BM25Okapi, BM25Plus, BM25L, BM25
+from mkr.retrievers.baseclass import Retriever, RetrieverOutput
+from mkr.utilities.general_utils import read_corpus, normalize_score
 
 
 @dataclass
@@ -58,22 +58,28 @@ class BM25SparseRetriever(Retriever):
         }
         json.dump(config, open(os.path.join(index_dir, "config.json"), "w"))
 
-    def __call__(self, queries: List[str], top_k: int = 3):
+    def __call__(self, queries: List[str], top_k: int = 3) -> RetrieverOutput:
         resultss = []
         for query in queries:
             # Tokenize query
             tokenized_query = word_tokenize(query, engine=self.tokenizer_name)
             # Retrieve documents
             scores = self.index.get_scores(tokenized_query)
-            sorted_scores = np.argsort(scores)[::-1]
+            indices = np.argsort(scores)[::-1]
             # Get top-k results
-            results = []
-            for idx in sorted_scores[:top_k]:
-                result = self.corpus[idx].copy()
-                result["score"] = scores[idx]
-                results.append(result)
+            results = {}
+            for idx in indices[:top_k]:
+                results[self.corpus[idx]["doc_id"]] = {
+                    **self.corpus[idx],
+                    "score": scores[idx],
+                }
             resultss.append(results)
-        return resultss
+        # Normalize score
+        resultss = normalize_score(resultss)
+        return RetrieverOutput(
+            queries=queries,
+            resultss=resultss,
+        )
 
     @classmethod
     def from_indexed(cls, index_dir: str):

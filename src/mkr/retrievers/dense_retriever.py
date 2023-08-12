@@ -7,9 +7,9 @@ from tqdm import trange
 from faiss import IndexFlat
 from dataclasses import dataclass
 from typing import List, Dict, Optional
-from mkr.retrievers.baseclass import Retriever
 from mkr.encoders.mUSE import mUSESentenceEncoder
-from mkr.utilities.general_utils import read_corpus
+from mkr.retrievers.baseclass import Retriever, RetrieverOutput
+from mkr.utilities.general_utils import read_corpus, normalize_score
 
 
 @dataclass
@@ -67,20 +67,26 @@ class DenseRetriever(Retriever):
         }
         json.dump(config, open(os.path.join(index_dir, "config.json"), "w"))
 
-    def __call__(self, queries: List[str], batch_size: int = 32, top_k: int = 3):
+    def __call__(self, queries: List[str], batch_size: int = 32, top_k: int = 3) -> RetrieverOutput:
         query_embeddings = self.encoder.encode_batch(queries, batch_size=batch_size)
         # Retrieve documents
         scoress, indicess = self.index.search(query_embeddings, k=top_k)
         # Get top-k results
         resultss = []
         for scores, indices in zip(scoress, indicess):
-            results = []
+            results = {}
             for idx, score in zip(indices, scores):
-                result = self.corpus[idx].copy()
-                result["score"] = score
-                results.append(result)
+                results[self.corpus[idx]["doc_id"]] = {
+                    **self.corpus[idx],
+                    "score": score,
+                }
             resultss.append(results)
-        return resultss
+        # Normalize score
+        resultss = normalize_score(resultss)
+        return RetrieverOutput(
+            queries=queries,
+            resultss=resultss,
+        )
 
     @classmethod
     def from_indexed(cls, index_dir: str):
