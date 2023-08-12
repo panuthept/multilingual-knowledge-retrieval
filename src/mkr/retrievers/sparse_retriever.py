@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional
 from pythainlp.tokenize import word_tokenize
 from mkr.retrievers.baseclass import Retriever
-from mkr.utilities.general_utils import read_corpus
 from rank_bm25 import BM25Okapi, BM25Plus, BM25L, BM25
+from mkr.utilities.general_utils import read_corpus, normalize_score
 
 
 @dataclass
@@ -68,16 +68,13 @@ class BM25SparseRetriever(Retriever):
             sorted_scores = np.argsort(scores)[::-1]
             # Get top-k results
             results = []
-            sum_score = 0.0 # for normalization
             for idx in sorted_scores[:top_k]:
                 result = self.corpus[idx].copy()
                 result["score"] = scores[idx]
-                sum_score += scores[idx]
                 results.append(result)
-            # Normalize scores
-            for result in results:
-                result["score"] /= sum_score
             resultss.append(results)
+        # Normalize score
+        resultss = normalize_score(resultss)
         return resultss
 
     @classmethod

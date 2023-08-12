@@ -1,10 +1,11 @@
 import pandas as pd
 from typing import List, Dict
 from mkr.retrievers.baseclass import Retriever
+from mkr.utilities.general_utils import normalize_score
 from mkr.resources.resource_manager import ResourceManager
 
 
-class DocumentRetriever:
+class DocumentRetriever(Retriever):
     def __init__(self, retriever: Retriever):
         self.resource_manager = ResourceManager(force_download=False)
         self.corpus = pd.read_csv(self.resource_manager.get_corpus_path("wikipedia_th_v2_raw"))
@@ -31,4 +32,6 @@ class DocumentRetriever:
                     doc_results[doc_id]["score"] += result["score"]
             doc_results = sorted(doc_results.values(), key=lambda x: x["score"], reverse=True)
             doc_resultss.append(doc_results[:top_k])
+        # Normalize score
+        doc_resultss = normalize_score(doc_resultss)
         return doc_resultss
