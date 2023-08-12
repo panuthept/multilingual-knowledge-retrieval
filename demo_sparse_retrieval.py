@@ -39,11 +39,12 @@ if __name__ == "__main__":
             qrels[data["query_id"]] = data["doc_ids"]
 
     # Retrieve documents
+    output = doc_retriever(queries, top_k=args.top_k)
     print("NOTE: [✅] means the document is relevant, [❌] means the document is not relevant.")
-    for q_id, (query, results) in enumerate(zip(queries, doc_retriever(queries, top_k=args.top_k))):
+    for q_id, (query, results) in enumerate(zip(output.queries, output.resultss)):
         print(f"Query: {query}")
         print("-" * 150)
-        for result in results:
+        for result in results.values():
             if result["doc_id"] in qrels[q_id]:
                 print(f"[✅] Score: {result['score']:.4f}\tDocument[{result['doc_id']}]: {result['doc_text']}")
             else:

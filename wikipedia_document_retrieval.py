@@ -34,12 +34,12 @@ if __name__ == "__main__":
 
     # Load queries
     queries = [args.query]
-    results = doc_retriever(queries, top_k=args.top_k)[0]
+    output = doc_retriever(queries, top_k=args.top_k)
 
     # Retrieve documents
     print(f"Query: {queries[0]}")
     print("-" * 150)
-    for result in results:
+    for result in output.resultss[0].values():
         for k, v in result.items():
             print(f"{k}: {v}")
         print("-" * 150)
