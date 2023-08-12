@@ -1,8 +1,8 @@
 tensorflow
 tensorflow-hub
-tensorflow-text
 gdown
 streamlit
 faiss-cpu
 pythainlp
 rank_bm25
+tensorflow-text
