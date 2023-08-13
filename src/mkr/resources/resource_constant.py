@@ -10,21 +10,21 @@ ENCODER_COLLECTION = {
 
 CORPUS_COLLECTION = {
     "wikipedia_th": {
-        "local_dir": "corpus",
+        "local_dir": "corpus/wikipedia_th",
         "file_name": "wikipedia_th.jsonl",
         "download_url": "https://drive.google.com/uc?id=1GtoAS1QCMLOxuE2zva8uGoF9U_XlASei",
         "download_output": "wikipedia_th.jsonl",
         "zip_file": False,
     },
     "wikipedia_th_v2": {
-        "local_dir": "corpus",
+        "local_dir": "corpus/wikipedia_th",
         "file_name": "wikipedia_th_v2.jsonl",
         "download_url": "https://drive.google.com/uc?id=1F7EyG4pzvVLSC4bubbAN1c6sAQ00PZQK",
         "download_output": "wikipedia_th_v2.jsonl.zip",
         "zip_file": True,
     },
     "wikipedia_th_v2_raw": {
-        "local_dir": "corpus",
+        "local_dir": "corpus/wikipedia_th",
         "file_name": "thaiwikipedia_v2.csv",
         "download_url": "https://drive.google.com/uc?id=1lkMQ189Xq1csyBJN9HmMJV3FMAwTjAb4",
         "download_output": "thaiwikipedia_v2.csv.zip",
