@@ -3,8 +3,8 @@ import pandas as pd
 from tqdm import trange
 
 if __name__ == "__main__":
-    df = pd.read_csv("./corpus/thaiwikipedia-new.csv")
-    aux_df = pd.read_csv("./corpus/thaiwikipedia.csv")
+    df = pd.read_csv("./corpus/wikipedia_th/thaiwikipedia_v2.csv")
+    aux_df = pd.read_csv("./corpus/wikipedia_th/thaiwikipedia.csv")
 
     corpus = []
     for row in trange(len(df)):
@@ -58,6 +58,6 @@ if __name__ == "__main__":
             })
     
     # Save to jsonl file
-    with open("./corpus/wikipedia_th_corpus.jsonl", "w", encoding="utf-8") as f:
+    with open("./corpus/wikipedia_th/wikipedia_th_v2.jsonl", "w", encoding="utf-8") as f:
         for doc in corpus:
             f.write(json.dumps(doc, ensure_ascii=False) + "\n")
