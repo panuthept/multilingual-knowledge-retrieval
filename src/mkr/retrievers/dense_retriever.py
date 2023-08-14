@@ -13,14 +13,14 @@ from mkr.utilities.general_utils import read_corpus, normalize_score
 
 
 @dataclass
-class EncoderConfig:
+class DenseRetrieverConfig:
     model_name: str
     corpus_dir: str
     batch_size: int = 32
 
 
 class DenseRetriever(Retriever):
-    def __init__(self, config: EncoderConfig, index: Optional[IndexFlat] = None):        
+    def __init__(self, config: DenseRetrieverConfig, index: Optional[IndexFlat] = None):        
         self.model_name = config.model_name
         self.corpus_dir = config.corpus_dir
         self.batch_size = config.batch_size
@@ -99,7 +99,7 @@ class DenseRetriever(Retriever):
         # Load index
         index = faiss.deserialize_index(pickle.load(open(os.path.join(index_dir, "index.pkl"), "rb")))
         # Load config
-        config = EncoderConfig(**json.load(open(os.path.join(index_dir, "config.json"), "r")))
+        config = DenseRetrieverConfig(**json.load(open(os.path.join(index_dir, "config.json"), "r")))
         return cls(
             config=config,
             index=index,

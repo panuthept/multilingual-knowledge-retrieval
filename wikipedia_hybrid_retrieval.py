@@ -2,7 +2,7 @@ import os
 import argparse
 from mkr.resources.resource_manager import ResourceManager
 from mkr.retrievers.hybrid_retriever import HybridRetriever
-from mkr.retrievers.dense_retriever import DenseRetriever, EncoderConfig
+from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
 from mkr.retrievers.sparse_retriever import BM25SparseRetriever, BM25Config
 
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         dense_retriever = DenseRetriever.from_indexed(dense_index_path)
     else:
         dense_retriever = DenseRetriever(
-            config=EncoderConfig(
+            config=DenseRetrieverConfig(
                 model_name=args.dense_index_path,
                 corpus_dir=corpus_path,
             )

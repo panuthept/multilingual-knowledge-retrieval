@@ -1,7 +1,7 @@
 import os
 import argparse
 from mkr.resources.resource_manager import ResourceManager
-from mkr.retrievers.dense_retriever import DenseRetriever, EncoderConfig
+from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
 
 
 if __name__ == "__main__":
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         doc_retriever = DenseRetriever.from_indexed(index_path)
     else:
         doc_retriever = DenseRetriever(
-            config=EncoderConfig(
+            config=DenseRetrieverConfig(
                 model_name=args.model_name,
                 corpus_dir=corpus_path,
             )
