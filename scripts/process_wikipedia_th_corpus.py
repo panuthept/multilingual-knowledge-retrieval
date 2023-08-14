@@ -1,63 +1,81 @@
+import os
 import json
 import pandas as pd
 from tqdm import trange
+from hashlib import sha256
+from collections import defaultdict
+
+
+def is_headline(text: str):
+    return text[:2] == "==" and text[-2:] == "=="
+
+
+def is_table(text: str):
+    if text == "" or text[0] == "|" or text[:2] == "{|" or text[:2] == "|}":
+        return True
+    return False
+
+
+def is_stop_headline(text: str):
+    HEADLINES = ["อ้างอิง", "แหล่งข้อมูลอื่น", "อ่านเพิ่ม", "ดูเพิ่ม"]
+    for headline in HEADLINES:
+        if text == f"== {headline} ==" or text == f"=={headline}==":
+            return True
+    return False
+
 
 if __name__ == "__main__":
     df = pd.read_csv("./corpus/wikipedia_th/thaiwikipedia_v2.csv")
     aux_df = pd.read_csv("./corpus/wikipedia_th/thaiwikipedia.csv")
 
-    corpus = []
+    corpus = defaultdict(dict)
     for row in trange(len(df)):
         doc = df.iloc[row]
-        doc_id = row
-        doc_title = doc["title"]
-        doc_text = doc["text"]
-        if not isinstance(doc_text, str):
+        # Extract document content
+        title = doc["title"]
+        content = doc["text"]
+        identifier = title
+        if not isinstance(content, str):
             continue
-        doc_text = doc_text.strip().replace("\n\n", "\n")
+        content = content.strip().replace("\n\n", "\n")
         # Get document url
-        doc_url = aux_df.where(aux_df["title"] == doc_title).dropna()["url"].values
-        if len(doc_url) > 0:
-            doc_url = doc_url[0]
+        urls = aux_df.where(aux_df["title"] == title).dropna()["url"].values
+        if len(urls) > 0:
+            url = urls[0]
         else:
-            doc_url = None
-        # Get passages in the document
-        texts = []
-        passage_count = 0
-        for text in doc_text.split("\n"):
-            if text == "" or text[0] == "|" or text[:2] == "{|" or text[:2] == "|}":
+            url = None
+        # Extract sub-contents
+        sub_content_fractions = []
+        for sub_content_fraction in content.split("\n"):
+            if sub_content_fraction == "" or is_table(sub_content_fraction):
                 continue
-            if text == "== อ้างอิง ==" or text == "== แหล่งข้อมูลอื่น ==" or text == "==อ่านเพิ่ม==" or text == "== ดูเพิ่ม ==":
+            if is_stop_headline(sub_content_fraction):
                 break
             
-            terminate_passage = False
-            if text[:2] == "==":
-                terminate_passage = True
+            if is_headline(sub_content_fraction):
+                sub_content = "\n".join(sub_content_fractions)
+                sub_identifier = sha256(sub_content.encode('utf-8')).hexdigest()
+                corpus[identifier][sub_identifier] = {
+                    "content": sub_content,
+                    "metadata": {
+                        "title": title,
+                        "url": url,
+                    },
+                }
+            sub_content_fractions.append(sub_content_fraction)
+        
+        if len(sub_content_fractions) > 0:
+            sub_content = "\n".join(sub_content_fractions)
+            sub_identifier = sha256(sub_content.encode('utf-8')).hexdigest()
+            corpus[identifier][sub_identifier] = {
+                "content": sub_content,
+                "metadata": {
+                    "title": title,
+                    "url": url,
+                },
+            }
 
-            if terminate_passage:
-                passage = "\n".join(texts)
-                if len(passage) > 100:
-                    corpus.append({
-                        "doc_id": f"{doc_id}-{passage_count}", 
-                        "doc_url": doc_url, 
-                        "doc_title": doc_title, 
-                        "doc_text": passage
-                    })
-                    passage_count += 1
-                texts = []
-
-            texts.append(text)
-
-        passage = "\n".join(texts)
-        if len(passage) > 100:
-            corpus.append({
-                "doc_id": f"{doc_id}-{passage_count}", 
-                "doc_url": doc_url, 
-                "doc_title": doc_title, 
-                "doc_text": passage
-            })
-    
-    # Save to jsonl file
-    with open("./corpus/wikipedia_th/wikipedia_th_v2.jsonl", "w", encoding="utf-8") as f:
-        for doc in corpus:
-            f.write(json.dumps(doc, ensure_ascii=False) + "\n")
+    if not os.path.exists("./corpus/wikipedia_th"):
+        os.makedirs("./corpus/wikipedia_th")
+    # Save corpus as a json file
+    json.dump(corpus, open("./corpus/wikipedia_th/wikipedia_th.json", "w", encoding="utf-8"), ensure_ascii=False, indent=4)
