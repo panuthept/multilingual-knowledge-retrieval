@@ -2,7 +2,7 @@ tensorflow
 tensorflow-hub
 gdown
 streamlit
-faiss-cpu
+chromadb
 pythainlp
 rank_bm25
 datasets
