@@ -1,36 +1,40 @@
 import os
 import math
 import json
-import faiss
+# import faiss
 import pickle
-from tqdm import trange
-from faiss import IndexFlat
-from dataclasses import dataclass
+import chromadb
+# from tqdm import trange
+from tqdm import tqdm
+# from faiss import IndexFlat
+from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 from mkr.encoders.mUSE import mUSESentenceEncoder
 from mkr.retrievers.baseclass import Retriever, RetrieverOutput
-from mkr.utilities.general_utils import read_corpus, normalize_score
+from mkr.utilities.general_utils import read_corpus, normalize_score, readline_corpus
 
 
 @dataclass
 class DenseRetrieverConfig:
     model_name: str
-    corpus_dir: str
-    batch_size: int = 32
+    database_dir: str
+    corpus_dirs: dict = field(default_factory=dict)  # {corpus_name: corpus_dir, ...}
 
 
 class DenseRetriever(Retriever):
-    def __init__(self, config: DenseRetrieverConfig, index: Optional[IndexFlat] = None):        
+    def __init__(self, config: DenseRetrieverConfig, auto_indexing: bool = True):
         self.model_name = config.model_name
-        self.corpus_dir = config.corpus_dir
-        self.batch_size = config.batch_size
+        self.database_dir = config.database_dir
+        self.corpus_dirs = config.corpus_dirs
 
         self.encoder = self._load_encoder(self.model_name)
-        self.corpus = read_corpus(self.corpus_dir)
+        self.client = chromadb.PersistentClient(path=self.database_dir)
+        # self.client = chromadb.Client()
 
-        self.index = index
-        if self.index is None:
-            self.index = self._create_index(self.corpus, batch_size=self.batch_size)
+        self.vector_collections = {}
+        if len(self.corpus_dirs) > 0 and auto_indexing:
+            for corpus_name, corpus_dir in self.corpus_dirs.items():
+                self._index_corpus(corpus_name, corpus_dir)
 
     def _load_encoder(self, model_name: str):
         # Load encoder
@@ -40,67 +44,71 @@ class DenseRetriever(Retriever):
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder
 
-    def _create_index(self, corpus: List[Dict[str, str]], batch_size: int = 32):
-        index = None
-        for batch_idx in trange(math.ceil(len(corpus) / batch_size)):
-            batch = corpus[batch_idx * batch_size: (batch_idx + 1) * batch_size]
-            doc_texts = [doc["doc_text"] for doc in batch]
-            corpus_embeddings = self.encoder.encode_batch(doc_texts, batch_size=batch_size)
-            if index is None:
-                # Create FAISS index
-                embeddings_dim = corpus_embeddings.shape[-1]
-                index = faiss.IndexFlatIP(embeddings_dim)
-            index.add(corpus_embeddings)
-        return index
+    def _index_corpus(self, corpus_name: str, corpus_dir: str):
+        self.vector_collections[corpus_name] = self.client.get_or_create_collection(name=corpus_name, metadata={"hnsw:space": "cosine"}, embedding_function=self.encoder)
+        for data in tqdm(readline_corpus(corpus_dir)):
+            self.vector_collections[corpus_name].upsert(
+                documents=[data["content"]],
+                metadatas=[data["metadata"]],
+                ids=[data["hash"]],
+            )
     
-    def save_index(self, index_dir: str):
-        # Create index_dir if not exists
-        if not os.path.exists(index_dir):
-            os.makedirs(index_dir)
-        # Save index
-        pickle.dump(faiss.serialize_index(self.index), open(os.path.join(index_dir, "index.pkl"), "wb"))
-        # Save config
-        config = {
-            "model_name": self.model_name,
-            "corpus_dir": self.corpus_dir,
-            "batch_size": self.batch_size,
-        }
-        json.dump(config, open(os.path.join(index_dir, "config.json"), "w"))
+    def add_corpus(self, corpus_name: str, corpus_dir: str):
+        assert corpus_name not in self.client.list_collections(), f"Collection already exists: {corpus_name}"
+        self._index_corpus(corpus_name, corpus_dir)
+        self.corpus_dirs[corpus_name] = corpus_dir
 
-    def __call__(self, queries: List[str], batch_size: int = 32, top_k: int = 3) -> RetrieverOutput:
-        query_embeddings = self.encoder.encode_batch(queries, batch_size=batch_size)
+    def update_corpus(self, corpus_name: str):
+        assert corpus_name in self.client.list_collections(), f"Collection not found: {corpus_name}"
+        self._index_corpus(corpus_name, self.corpus_dirs[corpus_name])
+
+    def __call__(self, queries: List[str], top_k: int = 3, corpus_names: List[str] = None) -> RetrieverOutput:
+        corpus_names = corpus_names if corpus_names is not None else list(self.client.list_collections())
+
         # Retrieve documents
-        scoress, indicess = self.index.search(query_embeddings, k=top_k)
-        # Get top-k results
-        resultss = []
-        for scores, indices in zip(scoress, indicess):
-            results = {}
-            for idx, score in zip(indices, scores):
-                results[self.corpus[idx]["doc_id"]] = {
-                    **self.corpus[idx],
-                    "score": score,
-                }
-            resultss.append(results)
-        # Normalize score
-        resultss = normalize_score(resultss)
-        return RetrieverOutput(
-            queries=queries,
-            resultss=resultss,
-        )
+        collection_resutls = {}
+        for corpus_name in corpus_names:
+            results = self.vector_collections[corpus_name].query(
+                query_texts=queries,
+                n_results=top_k,
+            )
+            # Normalize scores
+            print(results)
 
-    @classmethod
-    def from_indexed(cls, index_dir: str):
-        # Check if index_dir exists
-        assert os.path.exists(index_dir), f"Index directory not found: {index_dir}"
-        # Check if relevant files exist
-        assert os.path.exists(os.path.join(index_dir, "index.pkl")), f"Index file not found: {os.path.join(index_dir, 'index.pkl')}"
-        assert os.path.exists(os.path.join(index_dir, "config.json")), f"Config file not found: {os.path.join(index_dir, 'config.json')}"
 
-        # Load index
-        index = faiss.deserialize_index(pickle.load(open(os.path.join(index_dir, "index.pkl"), "rb")))
-        # Load config
-        config = DenseRetrieverConfig(**json.load(open(os.path.join(index_dir, "config.json"), "r")))
-        return cls(
-            config=config,
-            index=index,
-        )
+    #     query_embeddings = self.encoder.encode_batch(queries, batch_size=batch_size)
+    #     # Retrieve documents
+    #     scoress, indicess = self.index.search(query_embeddings, k=top_k)
+    #     # Get top-k results
+    #     resultss = []
+    #     for scores, indices in zip(scoress, indicess):
+    #         results = {}
+    #         for idx, score in zip(indices, scores):
+    #             results[self.corpus[idx]["doc_id"]] = {
+    #                 **self.corpus[idx],
+    #                 "score": score,
+    #             }
+    #         resultss.append(results)
+    #     # Normalize score
+    #     resultss = normalize_score(resultss)
+    #     return RetrieverOutput(
+    #         queries=queries,
+    #         resultss=resultss,
+    #     )
+
+    # @classmethod
+    # def from_indexed(cls, index_dir: str):
+    #     # Check if index_dir exists
+    #     assert os.path.exists(index_dir), f"Index directory not found: {index_dir}"
+    #     # Check if relevant files exist
+    #     assert os.path.exists(os.path.join(index_dir, "index.pkl")), f"Index file not found: {os.path.join(index_dir, 'index.pkl')}"
+    #     assert os.path.exists(os.path.join(index_dir, "config.json")), f"Config file not found: {os.path.join(index_dir, 'config.json')}"
+
+    #     # Load index
+    #     index = faiss.deserialize_index(pickle.load(open(os.path.join(index_dir, "index.pkl"), "rb")))
+    #     # Load config
+    #     config = DenseRetrieverConfig(**json.load(open(os.path.join(index_dir, "config.json"), "r")))
+    #     return cls(
+    #         config=config,
+    #         index=index,
+    #     )

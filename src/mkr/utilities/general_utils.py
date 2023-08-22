@@ -10,6 +10,12 @@ def read_corpus(corpus_dir: str):
             corpus.append(data)
     return corpus
 
+def readline_corpus(corpus_dir: str):
+    with open(corpus_dir, "r", encoding="utf-8") as f:
+        for line in f:
+            data = json.loads(line)
+            yield data
+
 def normalize_score(lst_results: List[Dict[str, Dict[str, Any]]]):
     for results in lst_results:
         sum_score = sum([results[doc_id]["score"] for doc_id in results.keys()]) + 1e-7

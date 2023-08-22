@@ -25,6 +25,9 @@ class mUSESentenceEncoder(SentenceEncoderBase):
         results = tf.concat(results, axis=0)
         return results.numpy()
     
+    def __call__(self, texts: List[str]):
+        return self.encode_batch(texts)
+    
 
 if __name__ == "__main__":
     encoder = mUSESentenceEncoder()
