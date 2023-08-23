@@ -14,16 +14,16 @@ class mUSESentenceEncoder(SentenceEncoderBase):
         self.model = tensorflow_hub.load(self.resource_manager.get_encoder_path("mUSE"))
 
     def encode(self, text: str):
-        return self.model(text).numpy()
+        return self.model(text).view(-1).numpy()
 
     def encode_batch(self, texts: List[str], batch_size: Optional[int] = 32):
-        results = []
+        embeddings = []
         batch_num = math.ceil(len(texts) / batch_size)
         for batch_idx in range(batch_num):
             batch_texts = texts[batch_idx * batch_size: (batch_idx + 1) * batch_size]
-            results.append(self.model(batch_texts))
-        results = tf.concat(results, axis=0)
-        return results.numpy()
+            embeddings.append(self.model(batch_texts))
+        embeddings = tf.concat(embeddings, axis=0).numpy()
+        return embeddings
     
 
 if __name__ == "__main__":

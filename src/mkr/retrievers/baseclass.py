@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 @dataclass
 class RetrieverOutput:
     queries: List[str]
-    resultss: List[Dict[str, Dict[str, Any]]]
+    results: List[List[Dict[str, Any]]]
 
 
 class Retriever(ABC):
