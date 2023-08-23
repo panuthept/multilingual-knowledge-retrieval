@@ -163,3 +163,4 @@ cython_debug/
 /models
 /indexes
 /corpus
+/database
