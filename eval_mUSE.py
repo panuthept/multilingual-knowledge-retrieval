@@ -46,7 +46,7 @@ if __name__ == "__main__":
         ),
     )
     doc_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
-    # doc_retrieval.add_corpus("tydiqa_primary", "./corpus/tydiqa/primary_corpus.jsonl")
+    doc_retrieval.add_corpus("tydiqa_primary", "./corpus/tydiqa/primary_corpus.jsonl")
     doc_retrieval.add_corpus("tydiqa_secondary", "./corpus/tydiqa/secondary_corpus.jsonl")
 
     # IAPP-WikiQA
@@ -68,25 +68,25 @@ if __name__ == "__main__":
     for k in [1, 3, 5, 10, 30, 50, 100]:
         print(f"Hit@{k}: {eval_metrics[f'hit@{k}']:.4f}")
     ####################################################################################
-    # # TYDI-QA (Primary)
-    # ####################################################################################
-    # # Load qrels
-    # qrels = {}  # {question: document_ids}
-    # with open("./corpus/tydiqa/primary_qrel_val.jsonl", "r", encoding="utf-8") as f:
-    #     for line in f:
-    #         data = json.loads(line)
-    #         question = data["question"]
-    #         document_ids = data["context_answers"].keys()
-    #         if question == "":
-    #             continue
-    #         qrels[question] = document_ids
+    # TYDI-QA (Primary)
+    ####################################################################################
+    # Load qrels
+    qrels = {}  # {question: document_ids}
+    with open("./corpus/tydiqa/primary_qrel_val.jsonl", "r", encoding="utf-8") as f:
+        for line in f:
+            data = json.loads(line)
+            question = data["question"]
+            document_ids = data["context_answers"].keys()
+            if question == "":
+                continue
+            qrels[question] = document_ids
 
-    # print("TYDI-QA (Primary) Performance:")
-    # eval_metrics = eval("tydiqa_primary", qrels, doc_retrieval)
-    # print(f"MRR@1000: {eval_metrics['mrr']:.4f}")
-    # for k in [1, 3, 5, 10, 30, 50, 100]:
-    #     print(f"Hit@{k}: {eval_metrics[f'hit@{k}']:.4f}")
-    # ####################################################################################
+    print("TYDI-QA (Primary) Performance:")
+    eval_metrics = eval("tydiqa_primary", qrels, doc_retrieval)
+    print(f"MRR@1000: {eval_metrics['mrr']:.4f}")
+    for k in [1, 3, 5, 10, 30, 50, 100]:
+        print(f"Hit@{k}: {eval_metrics[f'hit@{k}']:.4f}")
+    ####################################################################################
     # TYDI-QA (Secondary)
     ####################################################################################
     # Load qrels

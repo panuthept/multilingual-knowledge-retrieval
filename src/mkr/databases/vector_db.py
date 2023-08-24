@@ -9,23 +9,22 @@ from typing import List, Dict, Any
 class VectorCollection:
     def __init__(self, collection_path: str, engine_name: str = "faiss",):
         self.collection_path = collection_path
-
+        self.engine_name = engine_name
+        # Initial parameters
         self.ids = []
         self.contents = []
         self.metadatas = []
         self.embeddings = None
-        self.content_count = 0
-
         self.unique_ids = set()
-
-        self.search_engine = None
+        # Load parameters if exists
         if os.path.exists(self.collection_path):
             self.load()
-            if engine_name == "faiss":
-                self.search_engine = faiss.IndexFlatIP(self.embeddings.shape[-1])
-                self.search_engine.add(self.embeddings)
-        else:
-            os.makedirs(self.collection_path)
+
+    def _create_engine(self, embeddings: np.ndarray):
+        if self.engine_name == "faiss":
+            engine = faiss.IndexFlatIP(self.embeddings.shape[-1])
+            engine.add(embeddings)
+        return engine
 
     def add(
             self, 
@@ -36,9 +35,10 @@ class VectorCollection:
         ):
         # Initial embeddings
         if self.embeddings is None:
-            self.embeddings = np.zeros((0, vectors.shape[-1]))
+            self.embeddings = np.zeros((1000, vectors.shape[-1]))
 
         # Add doc to index
+        prev_idx = len(self.unique_ids)
         new_indices = []
         for index, (content_id, content, metadata) in enumerate(zip(ids, contents, metadatas)):
             if content_id in self.unique_ids:
@@ -47,10 +47,16 @@ class VectorCollection:
             self.ids.append(content_id)
             self.contents.append(content)
             self.metadatas.append(metadata)
-            # Update content_count
-            self.content_count += 1
             self.unique_ids.add(content_id)
-        self.embeddings = np.concatenate([self.embeddings, vectors[new_indices]], axis=0)
+        end_index = prev_idx + len(new_indices)
+
+        # Add embeddings
+        # If embeddings is full, resize it
+        if end_index > self.embeddings.shape[0]:
+            new_size = self.embeddings.shape[0] * 2
+            self.embeddings.resize(new_size, self.embeddings.shape[-1])
+        # Add new embeddings
+        self.embeddings[prev_idx:end_index] = vectors[new_indices]
 
     def search(
             self, 
@@ -63,16 +69,18 @@ class VectorCollection:
             # If candidate_ids is provided, search only in candidate_ids
             # To do so, we need to create a new search engine
             candidate_indices = [self.ids.index(candidate_id) for candidate_id in candidate_ids]
-            candidate_embeddings = self.embeddings[candidate_indices]
-            search_engine = faiss.IndexFlatIP(self.embeddings.shape[-1])
-            search_engine.add(candidate_embeddings)
+            engine = self._create_engine(self.embeddings[candidate_indices])
         else:
-            candidate_indices = np.arange(self.content_count)
-            search_engine = self.search_engine
+            candidate_indices = np.arange(len(self.unique_ids))
+            engine = self._create_engine(self.embeddings)
+
         # Search
-        lst_scores, lst_indices = search_engine.search(query_vector, k=top_k)
+        lst_scores, lst_indices = engine.search(query_vector, k=top_k)
         results = []
         for score, cand_index in zip(lst_scores[0], lst_indices[0]):
+            # Filter indices that exceed the number of documents
+            if cand_index >= len(candidate_indices):
+                continue
             real_index = candidate_indices[cand_index]
             results.append({
                 "id": self.ids[real_index],
@@ -80,6 +88,7 @@ class VectorCollection:
                 "metadata": self.metadatas[real_index],
                 "score": score,
             })
+            
         # Normalize scores
         max_score = max([result["score"] for result in results])
         for result in results:
@@ -91,7 +100,7 @@ class VectorCollection:
         if not os.path.exists(self.collection_path):
             os.makedirs(self.collection_path)
 
-        if self.content_count > 0:
+        if len(self.unique_ids) > 0:
             with open(os.path.join(self.collection_path, "corpus.jsonl"), "w", encoding="utf-8") as f:
                 for content_id, content, metadata in zip(self.ids, self.contents, self.metadatas):
                     f.write(json.dumps({
@@ -111,13 +120,14 @@ class VectorCollection:
             self.ids = []
             self.contents = []
             self.metadatas = []
+            self.unique_ids = set()
             with open(os.path.join(self.collection_path, "corpus.jsonl"), "rb") as f:
                 for line in f:
                     data = json.loads(line)
                     self.ids.append(data["id"])
                     self.contents.append(data["content"])
                     self.metadatas.append(data["metadata"])
-            self.content_count = len(self.ids)
+                    self.unique_ids.add(data["id"])
             # Load embeddings
             self.embeddings = pickle.load(open(os.path.join(self.collection_path, "embeddings.pkl"), "rb"))
 
@@ -131,8 +141,6 @@ class VectorDB:
 
         if os.path.exists(self.database_path):
             self.load()
-        else:
-            os.makedirs(self.database_path)
 
     def get_collection_names(self) -> List[str]:
         return list(self.collections.keys())

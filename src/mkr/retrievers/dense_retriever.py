@@ -53,7 +53,6 @@ class DenseRetriever(Retriever):
                 metadatas=batch_metadata,
             )
         # Save database
-        vector_collection.save()
         self.vector_db.save()
 
     def __call__(self, corpus_name: str, query: str, top_k: int = 3, candidate_ids: List[str] = None) -> List[Dict[str, Any]]:
