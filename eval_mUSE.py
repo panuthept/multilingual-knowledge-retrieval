@@ -2,21 +2,37 @@ import json
 from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
 
 
-def eval(qrels, retrieval, top_k=1):
-    output = retrieval(queries=list(qrels.keys()), top_k=top_k)
+def eval_hit(corpus_name, qrels, retrieval, top_k=1):
+    output = retrieval(corpus_name, queries=list(qrels.keys()), top_k=top_k)
 
     hit_at_k = 0
     for question, topk_results in zip(output.queries, output.results):
-        target_document_ids = qrels[question]
-        retrieved_doc_ids = set([result["id"] for result in topk_results])
-        is_hit = False
-        for target_document_id in target_document_ids:
-            if target_document_id in retrieved_doc_ids:
-                is_hit = True
+        target_document_ids = set(qrels[question])
+        retrieved_doc_ids = [result["id"] for result in topk_results]
+        for retrieved_doc_id in retrieved_doc_ids:
+            if retrieved_doc_id in target_document_ids:
+                hit_at_k += 1
                 break
-        hit_at_k += int(is_hit)
     hit_at_k = hit_at_k / len(qrels)
     return hit_at_k
+
+
+def eval_mrr(corpus_name, qrels, retrieval, top_k=1000):
+    output = retrieval(corpus_name, queries=list(qrels.keys()), top_k=top_k)
+
+    mrrs = []
+    for question, topk_results in zip(output.queries, output.results):
+        target_document_ids = set(qrels[question])
+        retrieved_doc_ids = [result["id"] for result in topk_results]
+
+        mrr = 0
+        for rank, retrieved_doc_id in enumerate(retrieved_doc_ids):
+            if retrieved_doc_id in target_document_ids:
+                mrr = 1 / (rank + 1)
+                break
+        mrrs.append(mrr)
+    avg_mrr = sum(mrrs) / len(mrrs)
+    return avg_mrr
 
 
 if __name__ == "__main__":
@@ -26,10 +42,10 @@ if __name__ == "__main__":
     doc_retrieval = DenseRetriever(
         DenseRetrieverConfig(
             model_name="mUSE",
-            database_path="./database/mUSE/iapp_wiki_qa",
+            database_path="./database/mUSE",
         ),
     )
-    # doc_retrieval.add_corpus("./corpus/iapp_wiki_qa/corpus.jsonl")
+    doc_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
 
     # Load qrels
     qrels = {}  # {question: document_ids}
@@ -43,8 +59,10 @@ if __name__ == "__main__":
             qrels[question] = document_ids
 
     print("IAPP-WikiQA Performance:")
+    mrr = eval_mrr("iapp_wiki_qa", qrels, doc_retrieval, top_k=1000)
+    print(f"MRR@1000: {mrr * 100:.2f}%")
     for k in [1, 3, 5, 10, 30, 50, 100]:
-        hit_at_k = eval(qrels, doc_retrieval, top_k=k)
+        hit_at_k = eval_hit("iapp_wiki_qa", qrels, doc_retrieval, top_k=k)
         print(f"Hit@{k}: {hit_at_k * 100:.2f}%")
     ####################################################################################
     # TYDI-QA (Primary)
@@ -53,10 +71,10 @@ if __name__ == "__main__":
     doc_retrieval = DenseRetriever(
         DenseRetrieverConfig(
             model_name="mUSE",
-            database_path="./database/mUSE/tydiqa_primary",
+            database_path="./database/mUSE",
         ),
     )
-    doc_retrieval.add_corpus("./corpus/tydiqa/primary_corpus.jsonl")
+    doc_retrieval.add_corpus("tydiqa_primary", "./corpus/tydiqa/primary_corpus.jsonl")
 
     # Load qrels
     qrels = {}  # {question: document_ids}
@@ -70,8 +88,10 @@ if __name__ == "__main__":
             qrels[question] = document_ids
 
     print("TYDI-QA (Primary) Performance:")
+    mrr = eval_mrr("tydiqa_primary", qrels, doc_retrieval, top_k=1000)
+    print(f"MRR@1000: {mrr * 100:.2f}%")
     for k in [1, 3, 5, 10, 30, 50, 100]:
-        hit_at_k = eval(qrels, doc_retrieval, top_k=k)
+        hit_at_k = eval_hit("tydiqa_primary", qrels, doc_retrieval, top_k=k)
         print(f"Hit@{k}: {hit_at_k * 100:.2f}%")
     ####################################################################################
     # TYDI-QA (Secondary)
@@ -80,10 +100,10 @@ if __name__ == "__main__":
     doc_retrieval = DenseRetriever(
         DenseRetrieverConfig(
             model_name="mUSE",
-            database_path="./database/mUSE/tydiqa_secondary",
+            database_path="./database/mUSE",
         ),
     )
-    doc_retrieval.add_corpus("./corpus/tydiqa/secondary_corpus.jsonl")
+    doc_retrieval.add_corpus("tydiqa_secondary", "./corpus/tydiqa/secondary_corpus.jsonl")
 
     # Load qrels
     qrels = {}  # {question: document_ids}
@@ -97,7 +117,9 @@ if __name__ == "__main__":
             qrels[question] = document_ids
 
     print("TYDI-QA (Secondary) Performance:")
+    mrr = eval_mrr("tydiqa_secondary", qrels, doc_retrieval, top_k=1000)
+    print(f"MRR@1000: {mrr * 100:.2f}%")
     for k in [1, 3, 5, 10, 30, 50, 100]:
-        hit_at_k = eval(qrels, doc_retrieval, top_k=k)
+        hit_at_k = eval_hit("tydiqa_secondary", qrels, doc_retrieval, top_k=k)
         print(f"Hit@{k}: {hit_at_k * 100:.2f}%")
     ####################################################################################
