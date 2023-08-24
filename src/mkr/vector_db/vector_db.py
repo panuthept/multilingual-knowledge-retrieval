@@ -1,4 +1,5 @@
 import os
+import json
 import faiss
 import pickle
 import numpy as np
@@ -34,16 +35,18 @@ class VectorCollection:
             self.embeddings = np.zeros((0, vectors.shape[-1]))
 
         # Add doc to index
-        for content_id, content, vector, metadata in zip(ids, contents, vectors, metadatas):
+        new_indices = []
+        for index, (content_id, content, metadata) in enumerate(zip(ids, contents, metadatas)):
             if content_id in self.unique_ids:
                 continue
+            new_indices.append(index)
             self.ids.append(content_id)
             self.contents.append(content)
             self.metadatas.append(metadata)
-            self.embeddings = np.concatenate([self.embeddings, vector.reshape(1, -1)], axis=0)
             # Update content_count
             self.content_count += 1
             self.unique_ids.add(content_id)
+        self.embeddings = np.concatenate([self.embeddings, vectors[new_indices]], axis=0)
 
     def search(
             self, 
@@ -87,32 +90,34 @@ class VectorCollection:
             os.makedirs(self.collection_path)
 
         if self.content_count > 0:
-            # Save ids
-            pickle.dump(self.ids, open(os.path.join(self.collection_path, "ids.pkl"), "wb"))
-            # Save contents
-            pickle.dump(self.contents, open(os.path.join(self.collection_path, "contents.pkl"), "wb"))
+            with open(os.path.join(self.collection_path, "corpus.jsonl"), "w", encoding="utf-8") as f:
+                for content_id, content, metadata in zip(self.ids, self.contents, self.metadatas):
+                    f.write(json.dumps({
+                        "id": content_id,
+                        "content": content,
+                        "metadata": metadata,
+                    }, ensure_ascii=False))
+                    f.write("\n")
             # Save embeddings
             pickle.dump(self.embeddings, open(os.path.join(self.collection_path, "embeddings.pkl"), "wb"))
-            # Save metadatas
-            pickle.dump(self.metadatas, open(os.path.join(self.collection_path, "metadatas.pkl"), "wb"))
-            # Save content_count
-            pickle.dump(self.content_count, open(os.path.join(self.collection_path, "content_count.pkl"), "wb"))
         
     def load(self):
         # Check if index_dir exists
         assert os.path.exists(self.collection_path), f"Index directory not found: {self.collection_path}"
 
         if os.path.exists(os.path.join(self.collection_path, "content_count.pkl")):
-            # Load ids
-            self.ids = pickle.load(open(os.path.join(self.collection_path, "ids.pkl"), "rb"))
-            # Load contents
-            self.contents = pickle.load(open(os.path.join(self.collection_path, "contents.pkl"), "rb"))
+            self.ids = []
+            self.contents = []
+            self.metadatas = []
+            with open(os.path.join(self.collection_path, "corpus.jsonl"), "rb") as f:
+                for line in f:
+                    data = json.loads(line)
+                    self.ids.append(data["id"])
+                    self.contents.append(data["content"])
+                    self.metadatas.append(data["metadata"])
+            self.content_count = len(self.ids)
             # Load embeddings
             self.embeddings = pickle.load(open(os.path.join(self.collection_path, "embeddings.pkl"), "rb"))
-            # Load metadatas
-            self.metadatas = pickle.load(open(os.path.join(self.collection_path, "metadatas.pkl"), "rb"))
-            # Load content_count
-            self.content_count = pickle.load(open(os.path.join(self.collection_path, "content_count.pkl"), "rb"))
 
 
 class VectorDB:
@@ -147,7 +152,7 @@ class VectorDB:
 
         if len(self.collections) > 0:
             # Save collection paths
-            pickle.dump(self.collection_paths, open(os.path.join(self.database_path, "collection_paths.pkl"), "wb"))
+            json.dump(self.collection_paths, open(os.path.join(self.database_path, "collection_paths.json"), "w"))
             # Save collections
             for collection in self.collections.values():
                 collection.save()
@@ -158,7 +163,7 @@ class VectorDB:
 
         if os.path.exists(os.path.join(self.database_path, "collection_paths.pkl")):
             # Load collection paths
-            self.collection_paths = pickle.load(open(os.path.join(self.database_path, "collection_paths.pkl"), "rb"))
+            self.collection_paths = json.load(open(os.path.join(self.database_path, "collection_paths.json"), "r"))
             # Load collections
             for name, path in self.collection_paths.items():
                 self.collections[name] = VectorCollection(path)

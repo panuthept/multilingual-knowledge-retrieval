@@ -36,8 +36,6 @@ def eval_mrr(corpus_name, qrels, retrieval, top_k=1000):
 
 
 if __name__ == "__main__":
-    # IAPP-WikiQA
-    ####################################################################################
     # Prepare retriever
     doc_retrieval = DenseRetriever(
         DenseRetrieverConfig(
@@ -46,7 +44,11 @@ if __name__ == "__main__":
         ),
     )
     doc_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
+    doc_retrieval.add_corpus("tydiqa_primary", "./corpus/tydiqa/primary_corpus.jsonl")
+    doc_retrieval.add_corpus("tydiqa_secondary", "./corpus/tydiqa/secondary_corpus.jsonl")
 
+    # IAPP-WikiQA
+    ####################################################################################
     # Load qrels
     qrels = {}  # {question: document_ids}
     with open("./corpus/iapp_wiki_qa/qrels.jsonl", "r", encoding="utf-8") as f:
@@ -67,15 +69,6 @@ if __name__ == "__main__":
     ####################################################################################
     # TYDI-QA (Primary)
     ####################################################################################
-    # Prepare retriever
-    doc_retrieval = DenseRetriever(
-        DenseRetrieverConfig(
-            model_name="mUSE",
-            database_path="./database/mUSE",
-        ),
-    )
-    doc_retrieval.add_corpus("tydiqa_primary", "./corpus/tydiqa/primary_corpus.jsonl")
-
     # Load qrels
     qrels = {}  # {question: document_ids}
     with open("./corpus/tydiqa/primary_qrel_val.jsonl", "r", encoding="utf-8") as f:
@@ -96,15 +89,6 @@ if __name__ == "__main__":
     ####################################################################################
     # TYDI-QA (Secondary)
     ####################################################################################
-    # Prepare retriever
-    doc_retrieval = DenseRetriever(
-        DenseRetrieverConfig(
-            model_name="mUSE",
-            database_path="./database/mUSE",
-        ),
-    )
-    doc_retrieval.add_corpus("tydiqa_secondary", "./corpus/tydiqa/secondary_corpus.jsonl")
-
     # Load qrels
     qrels = {}  # {question: document_ids}
     with open("./corpus/tydiqa/secondary_qrel_val.jsonl", "r", encoding="utf-8") as f:
