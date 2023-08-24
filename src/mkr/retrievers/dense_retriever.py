@@ -2,7 +2,7 @@ import os
 import math
 import json
 from tqdm import trange
-from typing import List, Dict
+from typing import List
 from dataclasses import dataclass
 from mkr.vector_db.faiss_db import FaissVectorDB
 from mkr.encoders.mUSE import mUSESentenceEncoder
@@ -32,7 +32,8 @@ class DenseRetriever(Retriever):
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder
     
-    def add_corpus(self, corpus_path: str, batch_size: int = 32):
+    def add_corpus(self, corpus_name: str, corpus_path: str, batch_size: int = 32):
+        vector_collection = self.vector_db.get_collection(corpus_name)
         corpus = read_corpus(corpus_path)
         for batch_idx in trange(math.ceil(len(corpus) / batch_size)):
             batch_corpus = corpus[batch_idx * batch_size: (batch_idx + 1) * batch_size]
@@ -42,19 +43,20 @@ class DenseRetriever(Retriever):
             batch_metadata = [doc["metadata"] for doc in batch_corpus]
             batch_embeddings = self.encoder.encode_batch(batch_contents, batch_size=batch_size)
             # Add to database
-            self.vector_db.add(
+            vector_collection.add(
                 ids=batch_ids,
                 contents=batch_contents,
                 vectors=batch_embeddings,
                 metadatas=batch_metadata,
             )
         # Save database
-        self.vector_db.save()
+        vector_collection.save()
 
-    def __call__(self, queries: List[str], batch_size: int = 32, top_k: int = 3) -> RetrieverOutput:
+    def __call__(self, corpus_name: str, queries: List[str], batch_size: int = 32, top_k: int = 3) -> RetrieverOutput:
+        vector_collection = self.vector_db.get_collection(corpus_name)
         query_embeddings = self.encoder.encode_batch(queries, batch_size=batch_size)
         # Retrieve documents
-        results = self.vector_db.search(query_embeddings, top_k=top_k)
+        results = vector_collection.search(query_embeddings, top_k=top_k)
         return RetrieverOutput(
             queries=queries,
             results=results,
