@@ -60,10 +60,10 @@ if __name__ == "__main__":
 
     print("IAPP-WikiQA Performance:")
     mrr = eval_mrr("iapp_wiki_qa", qrels, doc_retrieval, top_k=1000)
-    print(f"MRR@1000: {mrr * 100:.2f}%")
+    print(f"MRR@1000: {mrr:.4f}")
     for k in [1, 3, 5, 10, 30, 50, 100]:
         hit_at_k = eval_hit("iapp_wiki_qa", qrels, doc_retrieval, top_k=k)
-        print(f"Hit@{k}: {hit_at_k * 100:.2f}%")
+        print(f"Hit@{k}: {hit_at_k:.4f}")
     ####################################################################################
     # TYDI-QA (Primary)
     ####################################################################################
@@ -89,10 +89,10 @@ if __name__ == "__main__":
 
     print("TYDI-QA (Primary) Performance:")
     mrr = eval_mrr("tydiqa_primary", qrels, doc_retrieval, top_k=1000)
-    print(f"MRR@1000: {mrr * 100:.2f}%")
+    print(f"MRR@1000: {mrr:.4f}")
     for k in [1, 3, 5, 10, 30, 50, 100]:
         hit_at_k = eval_hit("tydiqa_primary", qrels, doc_retrieval, top_k=k)
-        print(f"Hit@{k}: {hit_at_k * 100:.2f}%")
+        print(f"Hit@{k}: {hit_at_k:.4f}")
     ####################################################################################
     # TYDI-QA (Secondary)
     ####################################################################################
@@ -118,8 +118,8 @@ if __name__ == "__main__":
 
     print("TYDI-QA (Secondary) Performance:")
     mrr = eval_mrr("tydiqa_secondary", qrels, doc_retrieval, top_k=1000)
-    print(f"MRR@1000: {mrr * 100:.2f}%")
+    print(f"MRR@1000: {mrr:.4f}")
     for k in [1, 3, 5, 10, 30, 50, 100]:
         hit_at_k = eval_hit("tydiqa_secondary", qrels, doc_retrieval, top_k=k)
-        print(f"Hit@{k}: {hit_at_k * 100:.2f}%")
+        print(f"Hit@{k}: {hit_at_k:.4f}")
     ####################################################################################
