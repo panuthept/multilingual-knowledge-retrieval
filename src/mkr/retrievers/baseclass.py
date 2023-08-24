@@ -5,11 +5,11 @@ from abc import ABC, abstractmethod
 
 @dataclass
 class RetrieverOutput:
-    queries: List[str]
-    results: List[List[Dict[str, Any]]]
+    query: str
+    results: List[Dict[str, Any]]
 
 
 class Retriever(ABC):
     @abstractmethod
-    def __call__(self, queries: List[str], top_k: int = 3) :
+    def __call__(self, query: str, top_k: int = 3) :
         NotImplementedError

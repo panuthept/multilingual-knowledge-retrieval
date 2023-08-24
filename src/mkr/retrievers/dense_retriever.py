@@ -2,12 +2,12 @@ import os
 import math
 import json
 from tqdm import trange
-from typing import List
 from dataclasses import dataclass
-from mkr.vector_db.vector_db import VectorDB
+from typing import List, Dict, Any
+from mkr.databases.vector_db import VectorDB
+from mkr.retrievers.baseclass import Retriever
 from mkr.encoders.mUSE import mUSESentenceEncoder
 from mkr.utilities.general_utils import read_corpus
-from mkr.retrievers.baseclass import Retriever, RetrieverOutput
 
 
 @dataclass
@@ -56,15 +56,12 @@ class DenseRetriever(Retriever):
         vector_collection.save()
         self.vector_db.save()
 
-    def __call__(self, corpus_name: str, queries: List[str], batch_size: int = 32, top_k: int = 3) -> RetrieverOutput:
+    def __call__(self, corpus_name: str, query: str, top_k: int = 3, candidate_ids: List[str] = None) -> List[Dict[str, Any]]:
         vector_collection = self.vector_db.get_collection(corpus_name)
-        query_embeddings = self.encoder.encode_batch(queries, batch_size=batch_size)
+        query_embedding = self.encoder.encode(query)
         # Retrieve documents
-        results = vector_collection.search(query_embeddings, top_k=top_k)
-        return RetrieverOutput(
-            queries=queries,
-            results=results,
-        )
+        results = vector_collection.search(query_embedding, top_k=top_k, candidate_ids=candidate_ids)
+        return results
     
     def save(self, path: str):
         # Save config

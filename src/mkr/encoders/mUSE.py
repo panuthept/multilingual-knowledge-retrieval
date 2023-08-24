@@ -14,7 +14,7 @@ class mUSESentenceEncoder(SentenceEncoderBase):
         self.model = tensorflow_hub.load(self.resource_manager.get_encoder_path("mUSE"))
 
     def encode(self, text: str):
-        return self.model(text).view(-1).numpy()
+        return self.model(text).numpy().reshape(1, -1)
 
     def encode_batch(self, texts: List[str], batch_size: Optional[int] = 32):
         embeddings = []

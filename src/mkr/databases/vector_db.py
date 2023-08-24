@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 
 
 class VectorCollection:
-    def __init__(self, collection_path: str):
+    def __init__(self, collection_path: str, engine_name: str = "faiss",):
         self.collection_path = collection_path
 
         self.ids = []
@@ -18,8 +18,12 @@ class VectorCollection:
 
         self.unique_ids = set()
 
+        self.search_engine = None
         if os.path.exists(self.collection_path):
             self.load()
+            if engine_name == "faiss":
+                self.search_engine = faiss.IndexFlatIP(self.embeddings.shape[-1])
+                self.search_engine.add(self.embeddings)
         else:
             os.makedirs(self.collection_path)
 
@@ -50,39 +54,37 @@ class VectorCollection:
 
     def search(
             self, 
-            query_vectors: np.ndarray, 
+            query_vector: np.ndarray, 
             top_k: int = 3, 
-            engine_name: str = "faiss",
             candidate_ids: List[str] = None,
-    ) -> List[List[Dict[str, Any]]]:
+    ) -> List[Dict[str, Any]]:
         # Get search engine
-        if engine_name == "faiss":
-            search_engine = faiss.IndexFlatIP(self.embeddings.shape[-1])
-            if candidate_ids is not None:
-                candidate_indices = [self.ids.index(candidate_id) for candidate_id in candidate_ids]
-            else:
-                candidate_indices = np.arange(self.content_count)
+        if candidate_ids is not None:
+            # If candidate_ids is provided, search only in candidate_ids
+            # To do so, we need to create a new search engine
+            candidate_indices = [self.ids.index(candidate_id) for candidate_id in candidate_ids]
             candidate_embeddings = self.embeddings[candidate_indices]
+            search_engine = faiss.IndexFlatIP(self.embeddings.shape[-1])
             search_engine.add(candidate_embeddings)
+        else:
+            candidate_indices = np.arange(self.content_count)
+            search_engine = self.search_engine
         # Search
-        lst_scores, lst_indices = search_engine.search(query_vectors, k=top_k)
-        lst_results = []
-        for scores, indices in zip(lst_scores, lst_indices):
-            results = []
-            for score, cand_index in zip(scores, indices):
-                real_index = candidate_indices[cand_index]
-                results.append({
-                    "id": self.ids[real_index],
-                    "content": self.contents[real_index],
-                    "metadata": self.metadatas[real_index],
-                    "score": score,
-                })
-            # Normalize scores
-            max_score = max([result["score"] for result in results])
-            for result in results:
-                result["score"] = result["score"] / max_score
-            lst_results.append(results)
-        return lst_results
+        lst_scores, lst_indices = search_engine.search(query_vector, k=top_k)
+        results = []
+        for score, cand_index in zip(lst_scores[0], lst_indices[0]):
+            real_index = candidate_indices[cand_index]
+            results.append({
+                "id": self.ids[real_index],
+                "content": self.contents[real_index],
+                "metadata": self.metadatas[real_index],
+                "score": score,
+            })
+        # Normalize scores
+        max_score = max([result["score"] for result in results])
+        for result in results:
+            result["score"] = result["score"] / max_score
+        return results
     
     def save(self):
         # Create save_dir if not exists
@@ -105,7 +107,7 @@ class VectorCollection:
         # Check if index_dir exists
         assert os.path.exists(self.collection_path), f"Index directory not found: {self.collection_path}"
 
-        if os.path.exists(os.path.join(self.collection_path, "content_count.pkl")):
+        if os.path.exists(os.path.join(self.collection_path, "embeddings.pkl")):
             self.ids = []
             self.contents = []
             self.metadatas = []
@@ -161,7 +163,7 @@ class VectorDB:
         # Check if index_dir exists
         assert os.path.exists(self.database_path), f"Index directory not found: {self.database_path}"
 
-        if os.path.exists(os.path.join(self.database_path, "collection_paths.pkl")):
+        if os.path.exists(os.path.join(self.database_path, "collection_paths.json")):
             # Load collection paths
             self.collection_paths = json.load(open(os.path.join(self.database_path, "collection_paths.json"), "r"))
             # Load collections
