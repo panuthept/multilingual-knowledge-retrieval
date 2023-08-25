@@ -16,6 +16,7 @@ def eval(corpus_name, qrels, retrieval):
         "mrr": 0,
     }
     # Evaluate
+    sample_count = 0
     for question, target_document_ids in tqdm(qrels.items()):
         target_document_ids = set(target_document_ids)
         if len(target_document_ids) == 0:
@@ -32,10 +33,11 @@ def eval(corpus_name, qrels, retrieval):
                 # MRR
                 metrics["mrr"] += 1 / (rank + 1)
                 break
+        sample_count += 1
     # Normalize metrics
     for k in [1, 3, 5, 10, 30, 50, 100]:
-        metrics[f"hit@{k}"] /= len(qrels)
-    metrics["mrr"] /= len(qrels)
+        metrics[f"hit@{k}"] /= sample_count
+    metrics["mrr"] /= sample_count
     return metrics
 
 
