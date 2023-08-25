@@ -5,6 +5,9 @@ from hashlib import sha256
 from datasets import load_dataset
 
 
+corpus_name = "tydiqa_thai"
+
+
 def get_primary_data(split="train", index=None):
     primary_dataset = load_dataset("tydiqa", "primary_task", split=split)
 
@@ -17,6 +20,10 @@ def get_primary_data(split="train", index=None):
         # Extract documents
         title = sample["document_title"]
         content = sample["document_plaintext"]
+        language = sample["language"]
+        if language != "thai":
+            continue
+        url = sample["document_url"]
         b_content = bytes(content, "utf-8")
         # Get sub-contents
         sub_contents = []
@@ -31,12 +38,14 @@ def get_primary_data(split="train", index=None):
             # Skip duplicate documents
             if sub_content_hash not in index:
                 # Add document to corpus
-                with open(f"./corpus/tydiqa/primary_corpus.jsonl", "a", encoding="utf-8") as f:
+                with open(f"./corpus/{corpus_name}/primary_corpus.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps({
                         "hash": sub_content_hash,
                         "content": sub_content,
                         "metadata": {
                             "title": title,
+                            "language": language,
+                            "url": url,
                         },
                     }, ensure_ascii=False))
                     f.write("\n")
@@ -102,7 +111,7 @@ def get_secondary_data(split="train", index=None):
         # Skip duplicate documents
         if content_hash not in index:
             # Add document to corpus
-            with open(f"./corpus/tydiqa/secondary_corpus.jsonl", "a", encoding="utf-8") as f:
+            with open(f"./corpus/{corpus_name}/secondary_corpus.jsonl", "a", encoding="utf-8") as f:
                 f.write(json.dumps({
                     "hash": content_hash,
                     "content": content,
@@ -138,41 +147,41 @@ def get_secondary_data(split="train", index=None):
 
 
 if __name__ == "__main__":
-    if not os.path.exists("./corpus/tydiqa"):
-        os.makedirs("./corpus/tydiqa")
+    if not os.path.exists(f"./corpus/{corpus_name}"):
+        os.makedirs(f"./corpus/{corpus_name}")
     else:
-        if os.path.exists("./corpus/tydiqa/primary_corpus.jsonl"):
+        if os.path.exists(f"./corpus/{corpus_name}/primary_corpus.jsonl"):
             raise Exception("Corpus already exists!")
         
     # Obtain corpus (primary task)
     primary_corpus_index, primary_qrel_train = get_primary_data(split="train")
     primary_corpus_index, primary_qrel_val = get_primary_data(split="validation", index=primary_corpus_index)
 
-    json.dump(primary_corpus_index, open("./corpus/tydiqa/primary_corpus_index.json", "w", encoding="utf-8"))
+    json.dump(primary_corpus_index, open(f"./corpus/{corpus_name}/primary_corpus_index.json", "w", encoding="utf-8"))
     # Save qrels as a jsonl file
-    with open("./corpus/tydiqa/primary_qrel_train.jsonl", "w", encoding="utf-8") as f:
+    with open(f"./corpus/{corpus_name}/primary_qrel_train.jsonl", "w", encoding="utf-8") as f:
         for qrel in primary_qrel_train:
             f.write(json.dumps(qrel, ensure_ascii=False) + "\n")
-    with open("./corpus/tydiqa/primary_qrel_val.jsonl", "w", encoding="utf-8") as f:
+    with open(f"./corpus/{corpus_name}/primary_qrel_val.jsonl", "w", encoding="utf-8") as f:
         for qrel in primary_qrel_val:
             f.write(json.dumps(qrel, ensure_ascii=False) + "\n")
 
 
-    if not os.path.exists("./corpus/tydiqa"):
-        os.makedirs("./corpus/tydiqa")
+    if not os.path.exists(f"./corpus/{corpus_name}"):
+        os.makedirs(f"./corpus/{corpus_name}")
     else:
-        if os.path.exists("./corpus/tydiqa/secondary_corpus.jsonl"):
+        if os.path.exists(f"./corpus/{corpus_name}/secondary_corpus.jsonl"):
             raise Exception("Corpus already exists!")
         
     # Obtain corpus (secondary task)
     secondary_corpus_index, secondary_qrel_train = get_secondary_data(split="train")
     secondary_corpus_index, secondary_qrel_val = get_secondary_data(split="validation", index=secondary_corpus_index)
 
-    json.dump(secondary_corpus_index, open("./corpus/tydiqa/secondary_corpus_index.json", "w", encoding="utf-8"))
+    json.dump(secondary_corpus_index, open(f"./corpus/{corpus_name}/secondary_corpus_index.json", "w", encoding="utf-8"))
     # Save qrels as a jsonl file
-    with open("./corpus/tydiqa/secondary_qrel_train.jsonl", "w", encoding="utf-8") as f:
+    with open(f"./corpus/{corpus_name}/secondary_qrel_train.jsonl", "w", encoding="utf-8") as f:
         for qrel in secondary_qrel_train:
             f.write(json.dumps(qrel, ensure_ascii=False) + "\n")
-    with open("./corpus/tydiqa/secondary_qrel_val.jsonl", "w", encoding="utf-8") as f:
+    with open(f"./corpus/{corpus_name}/secondary_qrel_val.jsonl", "w", encoding="utf-8") as f:
         for qrel in secondary_qrel_val:
             f.write(json.dumps(qrel, ensure_ascii=False) + "\n")

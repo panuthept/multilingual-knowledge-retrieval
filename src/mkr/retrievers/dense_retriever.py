@@ -32,11 +32,11 @@ class DenseRetriever(Retriever):
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder
     
-    def add_corpus(self, corpus_name: str, corpus_path: str, batch_size: int = 32, force_create: bool = False):
-        if corpus_name in self.vector_db.get_collection_names() and not force_create:
+    def add_corpus(self, corpus_name: str, corpus_path: str, batch_size: int = 32):
+        if corpus_name in self.vector_db.get_collection_names():
             return
         
-        vector_collection = self.vector_db.get_collection(corpus_name, force_create=force_create)
+        vector_collection = self.vector_db.create_or_get_collection(corpus_name)
         corpus = read_corpus(corpus_path)
         for batch_idx in trange(math.ceil(len(corpus) / batch_size)):
             batch_corpus = corpus[batch_idx * batch_size: (batch_idx + 1) * batch_size]
@@ -56,7 +56,7 @@ class DenseRetriever(Retriever):
         self.vector_db.save()
 
     def __call__(self, corpus_name: str, query: str, top_k: int = 3, candidate_ids: List[str] = None) -> List[Dict[str, Any]]:
-        vector_collection = self.vector_db.get_collection(corpus_name)
+        vector_collection = self.vector_db.create_or_get_collection(corpus_name)
         query_embedding = self.encoder.encode(query)
         # Retrieve documents
         results = vector_collection.search(query_embedding, top_k=top_k, candidate_ids=candidate_ids)

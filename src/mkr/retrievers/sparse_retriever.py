@@ -1,99 +1,54 @@
 import os
 import json
-import pickle
-import numpy as np
 from dataclasses import dataclass
-from typing import List, Dict, Optional
-from pythainlp.tokenize import word_tokenize
-from rank_bm25 import BM25Okapi, BM25Plus, BM25L, BM25
-from mkr.retrievers.baseclass import Retriever, RetrieverOutput
-from mkr.utilities.general_utils import read_corpus, normalize_score
+from typing import List, Dict, Any
+from mkr.databases.bm25_db import BM25DB
+from mkr.retrievers.baseclass import Retriever
+from mkr.utilities.general_utils import read_corpus
 
 
 @dataclass
-class BM25Config:
-    model_name: str
-    tokenizer_name: str
-    corpus_dir: str
+class SparseRetrieverConfig:
+    database_path: str
 
 
-class BM25SparseRetriever(Retriever):
-    def __init__(self, config: BM25Config, index: Optional[BM25] = None):        
-        self.model_name = config.model_name
-        self.tokenizer_name = config.tokenizer_name
-        self.corpus_dir = config.corpus_dir
+class SparseRetriever(Retriever):
+    def __init__(self, config: SparseRetrieverConfig):
+        self.database_path = config.database_path
 
-        self.corpus = read_corpus(self.corpus_dir)
+        self.bm25_db = BM25DB(self.database_path)
 
-        self.index = index
-        if self.index is None:
-            self.index = self._create_index(self.corpus)
+    def add_corpus(self, corpus_name: str, corpus_path: str):
+        if corpus_name in self.bm25_db.get_collection_names():
+            return
+        
+        bm25_collection = self.bm25_db.create_or_get_collection(corpus_name)
+        corpus = read_corpus(corpus_path)
+        for doc in corpus:
+            bm25_collection.add(
+                ids=[doc["hash"]],
+                contents=[doc["content"]],
+                metadatas=[doc["metadata"]],
+            )
+        bm25_collection.create_engine()
+        # Save database
+        self.bm25_db.save()
 
-    def _create_index(self, corpus: List[Dict[str, str]]):
-        # Tokenize corpus
-        doc_texts = [doc["doc_text"] for doc in corpus]
-        tokenized_corpus = [word_tokenize(doc_text, engine=self.tokenizer_name) for doc_text in doc_texts]
-        # Create index
-        if self.model_name == "bm25_okapi":
-            index = BM25Okapi(tokenized_corpus)
-        elif self.model_name == "bm25_plus":
-            index = BM25Plus(tokenized_corpus)
-        elif self.model_name == "bm25_l":
-            index = BM25L(tokenized_corpus)
-        else:
-            raise ValueError(f"Unknown BM25 model: {self.model_name}")
-        return index
-    
-    def save_index(self, index_dir: str):
-        # Create index_dir if not exists
-        if not os.path.exists(index_dir):
-            os.makedirs(index_dir)
-        # Save index
-        pickle.dump(self.index, open(os.path.join(index_dir, "index.pkl"), "wb"))
+    def __call__(self, corpus_name: str, query: str, top_k: int = 3, candidate_ids: List[str] = None) -> List[Dict[str, Any]]:
+        bm25_collection = self.bm25_db.create_or_get_collection(corpus_name)
+        # Retrieve documents
+        results = bm25_collection.search(query, top_k=top_k, candidate_ids=candidate_ids)
+        return results
+
+    def save(self, path: str):
         # Save config
         config = {
-            "model_name": self.model_name,
-            "tokenizer_name": self.tokenizer_name,
-            "corpus_dir": self.corpus_dir,
+            "database_path": self.database_path,
         }
-        json.dump(config, open(os.path.join(index_dir, "config.json"), "w"))
-
-    def __call__(self, queries: List[str], top_k: int = 3) -> RetrieverOutput:
-        resultss = []
-        for query in queries:
-            # Tokenize query
-            tokenized_query = word_tokenize(query, engine=self.tokenizer_name)
-            # Retrieve documents
-            scores = self.index.get_scores(tokenized_query)
-            indices = np.argsort(scores)[::-1]
-            # Get top-k results
-            results = {}
-            for idx in indices[:top_k]:
-                results[self.corpus[idx]["doc_id"]] = {
-                    **self.corpus[idx],
-                    "score": scores[idx],
-                }
-            resultss.append(results)
-        # Normalize score
-        resultss = normalize_score(resultss)
-        return RetrieverOutput(
-            queries=queries,
-            resultss=resultss,
-        )
+        json.dump(config, open(os.path.join(path, "config.json"), "w"))
 
     @classmethod
-    def from_indexed(cls, index_dir: str):
-        # Check if index_dir exists
-        assert os.path.exists(index_dir), f"Index directory not found: {index_dir}"
-        # Check if relevant files exist
-        assert os.path.exists(os.path.join(index_dir, "index.pkl")), f"Index file not found: {os.path.join(index_dir, 'index.pkl')}"
-        assert os.path.exists(os.path.join(index_dir, "config.json")), f"Config file not found: {os.path.join(index_dir, 'config.json')}"
-
-        # Load index
-        index = pickle.load(open(os.path.join(index_dir, "index.pkl"), "rb"))
-        # Load config
-        config = BM25Config(**json.load(open(os.path.join(index_dir, "config.json"), "r")))
+    def from_config(cls, path):
         return cls(
-            config=config,
-            index=index,
+            config=SparseRetrieverConfig(**json.load(open(os.path.join(path, "config.json"), "r")))
         )

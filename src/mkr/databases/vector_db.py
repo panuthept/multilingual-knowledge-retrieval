@@ -6,6 +6,27 @@ import numpy as np
 from typing import List, Dict, Any
 
 
+class AutoVectorSeachEngine:
+    @classmethod
+    def create_engine(cls, embeddings: np.ndarray, engine_name: str = "faiss"):
+        if engine_name == "faiss":
+            if embeddings.shape[0] < 1000000:
+                # Using flat index on small dataset
+                engine = faiss.IndexFlatIP(embeddings.shape[-1])
+                engine.add(embeddings)
+            else:
+                # Using IVFFlat index on large dataset
+                engine = faiss.IndexIVFFlat(
+                    faiss.IndexFlatIP(embeddings.shape[-1]),
+                    embeddings.shape[-1],
+                    100,
+                    faiss.METRIC_INNER_PRODUCT,
+                )
+                engine.train(embeddings)
+                engine.add(embeddings)
+        return engine
+
+
 class VectorCollection:
     def __init__(self, collection_path: str, engine_name: str = "faiss",):
         self.collection_path = collection_path
@@ -16,15 +37,10 @@ class VectorCollection:
         self.metadatas = []
         self.embeddings = None
         self.unique_ids = set()
+        self.default_engine = None
         # Load parameters if exists
         if os.path.exists(self.collection_path):
             self.load()
-
-    def _create_engine(self, embeddings: np.ndarray):
-        if self.engine_name == "faiss":
-            engine = faiss.IndexFlatIP(self.embeddings.shape[-1])
-            engine.add(embeddings)
-        return engine
 
     def add(
             self, 
@@ -69,10 +85,12 @@ class VectorCollection:
             # If candidate_ids is provided, search only in candidate_ids
             # To do so, we need to create a new search engine
             candidate_indices = [self.ids.index(candidate_id) for candidate_id in candidate_ids]
-            engine = self._create_engine(self.embeddings[candidate_indices])
+            engine = AutoVectorSeachEngine.create_engine(self.embeddings[candidate_indices], self.engine_name)
         else:
             candidate_indices = np.arange(len(self.unique_ids))
-            engine = self._create_engine(self.embeddings)
+            if self.default_engine is None:
+                self.default_engine = AutoVectorSeachEngine.create_engine(self.embeddings, self.engine_name)
+            engine = self.default_engine
 
         # Search
         lst_scores, lst_indices = engine.search(query_vector, k=top_k)
@@ -130,6 +148,8 @@ class VectorCollection:
                     self.unique_ids.add(data["id"])
             # Load embeddings
             self.embeddings = pickle.load(open(os.path.join(self.collection_path, "embeddings.pkl"), "rb"))
+            # Load search engine
+            self.default_engine = AutoVectorSeachEngine.create_engine(self.embeddings, self.engine_name)
 
 
 class VectorDB:
@@ -143,16 +163,14 @@ class VectorDB:
             self.load()
 
     def get_collection_names(self) -> List[str]:
-        return list(self.collections.keys())
+        return list(self.collection_paths.keys())
 
-    def create_collection(self, name: str, force_create: bool = False):
-        if name not in self.collections or force_create:
-            self.collections[name] = VectorCollection(os.path.join(self.database_path, name))
+    def create_or_get_collection(self, name: str) -> VectorCollection:
+        if name not in self.collection_paths:
             self.collection_paths[name] = os.path.join(self.database_path, name)
-
-    def get_collection(self, name: str, force_create: bool = False) -> VectorCollection:
-        if name not in self.collections or force_create:
-            self.create_collection(name, force_create=force_create)
+            self.collections[name] = VectorCollection(self.collection_paths[name])
+        if name not in self.collections:
+            self.collections[name] = VectorCollection(self.collection_paths[name])
         return self.collections[name]
 
     def save(self):
@@ -160,7 +178,7 @@ class VectorDB:
         if not os.path.exists(self.database_path):
             os.makedirs(self.database_path)
 
-        if len(self.collections) > 0:
+        if len(self.collection_paths) > 0:
             # Save collection paths
             json.dump(self.collection_paths, open(os.path.join(self.database_path, "collection_paths.json"), "w"))
             # Save collections
@@ -174,6 +192,3 @@ class VectorDB:
         if os.path.exists(os.path.join(self.database_path, "collection_paths.json")):
             # Load collection paths
             self.collection_paths = json.load(open(os.path.join(self.database_path, "collection_paths.json"), "r"))
-            # Load collections
-            for name, path in self.collection_paths.items():
-                self.collections[name] = VectorCollection(path)

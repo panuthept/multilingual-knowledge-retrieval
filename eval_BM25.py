@@ -1,6 +1,6 @@
 import json
 from tqdm import tqdm
-from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
+from mkr.retrievers.sparse_retriever import SparseRetriever, SparseRetrieverConfig
 
 
 def eval(corpus_name, qrels, retrieval):
@@ -41,10 +41,9 @@ def eval(corpus_name, qrels, retrieval):
 
 if __name__ == "__main__":
     # Prepare retriever
-    doc_retrieval = DenseRetriever(
-        DenseRetrieverConfig(
-            model_name="mUSE",
-            database_path="./database/mUSE",
+    doc_retrieval = SparseRetriever(
+        SparseRetrieverConfig(
+            database_path="./database/BM25",
         ),
     )
     doc_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
