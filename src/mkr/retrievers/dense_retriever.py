@@ -55,7 +55,13 @@ class DenseRetriever(Retriever):
         # Save database
         self.vector_db.save()
 
-    def __call__(self, corpus_name: str, query: str, top_k: int = 3, candidate_ids: List[str] = None) -> List[Dict[str, Any]]:
+    def __call__(
+            self, 
+            corpus_name: str, 
+            query: str, 
+            top_k: int = 3, 
+            candidate_ids: List[str] = None
+        ) -> List[Dict[str, Any]]:
         vector_collection = self.vector_db.create_or_get_collection(corpus_name)
         query_embedding = self.encoder.encode(query)
         # Retrieve documents

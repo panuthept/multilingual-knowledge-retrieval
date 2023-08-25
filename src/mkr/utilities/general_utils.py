@@ -10,9 +10,8 @@ def read_corpus(corpus_dir: str):
             corpus.append(data)
     return corpus
 
-def normalize_score(lst_results: List[Dict[str, Dict[str, Any]]]):
-    for results in lst_results:
-        sum_score = sum([results[doc_id]["score"] for doc_id in results.keys()]) + 1e-7
-        for doc_id in results.keys():
-            results[doc_id]["score"] /= sum_score
-    return lst_results
+def normalize_score(results: List[Dict[str, Any]]):
+    max_score = max([result["score"] for result in results])
+    for result in results:
+        result["score"] = result["score"] / max_score
+    return results

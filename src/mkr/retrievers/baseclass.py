@@ -1,12 +1,4 @@
-from dataclasses import dataclass
-from typing import List, Dict, Any
 from abc import ABC, abstractmethod
-
-
-@dataclass
-class RetrieverOutput:
-    query: str
-    results: List[Dict[str, Any]]
 
 
 class Retriever(ABC):

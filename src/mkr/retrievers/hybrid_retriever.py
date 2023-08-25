@@ -1,6 +1,6 @@
-from typing import List, Dict
+from typing import List, Dict, Any
+from mkr.retrievers.baseclass import Retriever
 from mkr.utilities.general_utils import normalize_score
-from mkr.retrievers.baseclass import Retriever, RetrieverOutput
 
 
 class HybridRetriever(Retriever):
@@ -8,36 +8,39 @@ class HybridRetriever(Retriever):
         self.dense_retriever = dense_retriever
         self.sparse_retriever = sparse_retriever
 
-    def __call__(self, queries: List[str], top_k: int = 3, sparse_weight: float = 0.5) -> RetrieverOutput:
-        combined_resultss = []
-        dense_resultss: List[List[Dict]] = self.dense_retriever(queries, top_k=top_k).resultss
-        sparse_resultss: List[List[Dict]] = self.sparse_retriever(queries, top_k=top_k).resultss
-        for dense_results, sparse_results in zip(dense_resultss, sparse_resultss):
-            combined_results = {}
-            for dense_result in dense_results.values():
-                combined_results[dense_result["doc_id"]] = {
-                    "doc_id": dense_result["doc_id"],
-                    "score": dense_result["score"] * (1 - sparse_weight),
-                    "doc_url": dense_result["doc_url"],
-                    "doc_title": dense_result["doc_title"],
-                    "doc_text": dense_result["doc_text"],
+    def __call__(
+            self, 
+            corpus_name: str,
+            query: str, 
+            top_k: int = 3, 
+            candidate_ids: List[str] = None, 
+            sparse_weight: float = 0.5
+        ) -> List[Dict[str, Any]]:
+        dense_results: List[Dict[str, Any]] = self.dense_retriever(corpus_name, query, top_k=top_k, candidate_ids=candidate_ids)
+        sparse_results: List[Dict[str, Any]] = self.sparse_retriever(corpus_name, query, top_k=top_k, candidate_ids=candidate_ids)
+
+        combined_results = {}
+        for dense_result in dense_results:
+            combined_results[dense_result["id"]] = {
+                "id": dense_result["id"],
+                "score": dense_result["score"] * (1 - sparse_weight),
+                "content": dense_result["content"],
+                "metadata": dense_result["metadata"],
+            }
+        for sparse_result in sparse_results:
+            if sparse_result["id"] not in combined_results:
+                combined_results[sparse_result["id"]] = {
+                    "id": sparse_result["id"],
+                    "score": sparse_result["score"] * sparse_weight,
+                    "content": sparse_result["content"],
+                    "metadata": sparse_result["metadata"],
                 }
-            for sparse_result in sparse_results.values():
-                if sparse_result["doc_id"] not in combined_results:
-                    combined_results[sparse_result["doc_id"]] = {
-                        "doc_id": sparse_result["doc_id"],
-                        "score": sparse_result["score"] * sparse_weight,
-                        "doc_url": sparse_result["doc_url"],
-                        "doc_title": sparse_result["doc_title"],
-                        "doc_text": sparse_result["doc_text"],
-                    }
-                else:
-                    combined_results[sparse_result["doc_id"]]["score"] += sparse_result["score"] * sparse_weight
-            combined_results = {doc_result["doc_id"]: doc_result for doc_result in sorted(combined_results.values(), key=lambda x: x["score"], reverse=True)[:top_k]}
-            combined_resultss.append(combined_results)
+            else:
+                combined_results[sparse_result["id"]]["score"] += sparse_result["score"] * sparse_weight
+        # Convert combined_results to list
+        combined_results = list(combined_results.values())
+        # Sort by score
+        combined_results = sorted(combined_results, key=lambda x: x["score"], reverse=True)
         # Normalize score
-        combined_resultss = normalize_score(combined_resultss)
-        return RetrieverOutput(
-            queries=queries,
-            resultss=combined_resultss,
-        )
+        combined_results = normalize_score(combined_results)
+        return combined_results

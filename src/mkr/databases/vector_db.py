@@ -4,6 +4,7 @@ import faiss
 import pickle
 import numpy as np
 from typing import List, Dict, Any
+from mkr.utilities.general_utils import normalize_score
 
 
 class AutoVectorSeachEngine:
@@ -79,7 +80,7 @@ class VectorCollection:
             query_vector: np.ndarray, 
             top_k: int = 3, 
             candidate_ids: List[str] = None,
-    ) -> List[Dict[str, Any]]:
+        ) -> List[Dict[str, Any]]:
         # Get search engine
         if candidate_ids is not None:
             # If candidate_ids is provided, search only in candidate_ids
@@ -108,9 +109,7 @@ class VectorCollection:
             })
             
         # Normalize scores
-        max_score = max([result["score"] for result in results])
-        for result in results:
-            result["score"] = result["score"] / max_score
+        results = normalize_score(results)
         return results
     
     def save(self):

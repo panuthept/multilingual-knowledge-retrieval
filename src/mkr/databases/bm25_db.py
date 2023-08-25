@@ -5,6 +5,7 @@ import numpy as np
 from typing import List, Dict, Any
 from pythainlp.tokenize import word_tokenize
 from rank_bm25 import BM25Okapi, BM25Plus, BM25L, BM25
+from mkr.utilities.general_utils import normalize_score
 
 
 class AutoBM25SeachEngine:
@@ -64,7 +65,7 @@ class BM25Collection:
             query: str, 
             top_k: int = 3, 
             candidate_ids: List[str] = None,
-    ) -> List[Dict[str, Any]]:
+        ) -> List[Dict[str, Any]]:
         # Get search engine
         if self.engine is None:
             self.engine = AutoBM25SeachEngine.create_engine(self.contents, self.tokenizer_name, self.engine_name)
@@ -86,9 +87,7 @@ class BM25Collection:
                 "score": score,
             })
         # Normalize scores
-        max_score = max([result["score"] for result in results])
-        for result in results:
-            result["score"] = result["score"] / max_score
+        results = normalize_score(results)
         return results
     
     def save(self):

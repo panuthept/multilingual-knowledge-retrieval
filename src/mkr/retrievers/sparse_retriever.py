@@ -34,7 +34,13 @@ class SparseRetriever(Retriever):
         # Save database
         self.bm25_db.save()
 
-    def __call__(self, corpus_name: str, query: str, top_k: int = 3, candidate_ids: List[str] = None) -> List[Dict[str, Any]]:
+    def __call__(
+            self, 
+            corpus_name: str, 
+            query: str, 
+            top_k: int = 3, 
+            candidate_ids: List[str] = None
+        ) -> List[Dict[str, Any]]:
         bm25_collection = self.bm25_db.create_or_get_collection(corpus_name)
         # Retrieve documents
         results = bm25_collection.search(query, top_k=top_k, candidate_ids=candidate_ids)
