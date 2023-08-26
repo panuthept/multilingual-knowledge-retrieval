@@ -4,7 +4,7 @@ import tensorflow_text  # Used by the mUSE model
 import tensorflow as tf
 
 from typing import List, Optional
-from mkr.encoders.baseclass import SentenceEncoderBase
+from mkr.models.baseclass import SentenceEncoderBase
 from mkr.resources.resource_manager import ResourceManager
 
 

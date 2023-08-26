@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any
 from mkr.databases.vector_db import VectorDB
 from mkr.retrievers.baseclass import Retriever
-from mkr.encoders.mUSE import mUSESentenceEncoder
+from mkr.models.mUSE import mUSESentenceEncoder
 from mkr.utilities.general_utils import read_corpus
 
 

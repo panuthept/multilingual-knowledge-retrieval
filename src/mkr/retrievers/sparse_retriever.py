@@ -1,5 +1,6 @@
 import os
 import json
+from tqdm import trange
 from dataclasses import dataclass
 from typing import List, Dict, Any
 from mkr.databases.bm25_db import BM25DB
@@ -24,7 +25,7 @@ class SparseRetriever(Retriever):
         
         bm25_collection = self.bm25_db.create_or_get_collection(corpus_name)
         corpus = read_corpus(corpus_path)
-        for doc in corpus:
+        for doc in tqdm(corpus):
             bm25_collection.add(
                 ids=[doc["hash"]],
                 contents=[doc["content"]],
