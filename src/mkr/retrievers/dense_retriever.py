@@ -8,6 +8,7 @@ from mkr.databases.vector_db import VectorDB
 from mkr.retrievers.baseclass import Retriever
 from mkr.models.mUSE import mUSESentenceEncoder
 from mkr.utilities.general_utils import read_corpus
+from mkr.resources.resource_constant import ENCODER_COLLECTION
 
 
 @dataclass
@@ -26,8 +27,9 @@ class DenseRetriever(Retriever):
 
     def _load_encoder(self, model_name: str):
         # Load encoder
-        if model_name == "mUSE":
-            encoder = mUSESentenceEncoder()
+        if "mUSE" in model_name:
+            assert model_name in ENCODER_COLLECTION, f"Unknown encoder: {model_name}"
+            encoder = mUSESentenceEncoder(model_name)
         else:
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder
@@ -44,6 +46,8 @@ class DenseRetriever(Retriever):
             batch_ids = [doc["hash"] for doc in batch_corpus]
             batch_contents = [doc["content"] for doc in batch_corpus]
             batch_metadata = [doc["metadata"] for doc in batch_corpus]
+            batch_titles = [metadata["title"] for metadata in batch_metadata]
+            batch_contents = [f"{title}\n{content}" for title, content in zip(batch_titles, batch_contents)]
             batch_embeddings = self.encoder.encode_batch(batch_contents, batch_size=batch_size)
             # Add to database
             vector_collection.add(

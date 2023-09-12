@@ -1,4 +1,5 @@
 import json
+import argparse
 from tqdm import tqdm
 from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
 
@@ -42,21 +43,25 @@ def eval(corpus_name, qrels, retrieval):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_name", type=str, default="mUSE")
+    args = parser.parse_args()
+
     # Prepare retriever
     doc_retrieval = DenseRetriever(
         DenseRetrieverConfig(
-            model_name="mUSE",
-            database_path="./database/mUSE",
+            model_name=args.model_name,
+            database_path=f"./database/{args.model_name}",
         ),
     )
     doc_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
-    doc_retrieval.add_corpus("tydiqa_thai", "./corpus/tydiqa_thai/primary_corpus.jsonl")
+    doc_retrieval.add_corpus("tydiqa_thai", "./corpus/tydiqa_primary/corpus.jsonl")
 
     # IAPP-WikiQA
     ####################################################################################
     # Load qrels
     qrels = {}  # {question: document_ids}
-    with open("./corpus/iapp_wiki_qa/qrels.jsonl", "r", encoding="utf-8") as f:
+    with open("./corpus/iapp_wiki_qa/qrel_train.jsonl", "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
             question = data["question"]
@@ -75,7 +80,7 @@ if __name__ == "__main__":
     ####################################################################################
     # Load qrels
     qrels = {}  # {question: document_ids}
-    with open("./corpus/tydiqa_thai/primary_qrel_val.jsonl", "r", encoding="utf-8") as f:
+    with open("./corpus/tydiqa_primary/qrel_val.jsonl", "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
             question = data["question"]

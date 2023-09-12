@@ -5,6 +5,13 @@ ENCODER_COLLECTION = {
         "download_url": "https://drive.google.com/uc?id=1MjDW6c2It-TM0YGoaYNh3Rq5P3cKvQRn",
         "download_output": "universal-sentence-encoder-multilingual_3.zip",
         "zip_file": True,
+    },
+    "finetuned_mUSE": {
+        "local_dir": "models",
+        "file_name": "finetuned_mUSE",
+        "download_url": None,
+        "download_output": None,
+        "zip_file": True,
     }
 }
 

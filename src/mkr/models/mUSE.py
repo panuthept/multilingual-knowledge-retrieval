@@ -9,9 +9,9 @@ from mkr.resources.resource_manager import ResourceManager
 
 
 class mUSESentenceEncoder(SentenceEncoderBase):
-    def __init__(self):
+    def __init__(self, model_name: str = "mUSE"):
         self.resource_manager = ResourceManager()
-        self.model = tensorflow_hub.load(self.resource_manager.get_encoder_path("mUSE"))
+        self.model = tensorflow_hub.load(self.resource_manager.get_encoder_path(model_name))
 
     def encode(self, text: str):
         return self.model(text).numpy().reshape(1, -1)
