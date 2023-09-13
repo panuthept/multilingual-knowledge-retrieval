@@ -14,8 +14,6 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.keras.utils import Sequence, SequenceEnqueuer
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    # Avoid spamming console output messages
-
 
 def cal_mrr(targets, preds, *args, **kwargs):
     targets = tf.argmax(targets, axis=-1)   # Convert one-hot to index
@@ -183,9 +181,6 @@ if __name__ == "__main__":
         hard_negative_path=os.path.join(args.dataset_path, "bm25_top1000.jsonl"),
         hard_negative_factor=args.hard_negative_factor,
     )
-    enqueuer = SequenceEnqueuer(training_dataset)
-    enqueuer.start(workers=args.workers, max_queue_size=10)
-    training_dataset = enqueuer.get()
     print(f"Training size: {len(training_dataset)}")
     if os.path.exists(os.path.join(args.dataset_path, "qrel_val.jsonl")):
         validation_dataset = DPRDataset(
@@ -262,7 +257,6 @@ if __name__ == "__main__":
                     tf.saved_model.save(hub_load, os.path.join(args.save_dir, args.save_name, "best_model"))
         training_dataset.on_epoch_end()
         K.set_value(trainer.optimizer.learning_rate, K.get_value(trainer.optimizer.learning_rate) * (1 - args.learning_rate_decay))
-    enqueuer.stop()
 
     # Validation step
     if "validation_dataset" in locals():
