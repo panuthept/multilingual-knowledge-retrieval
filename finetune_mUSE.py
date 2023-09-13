@@ -9,10 +9,12 @@ from tqdm import trange
 import tensorflow as tf
 import tensorflow_hub as hub
 from tensorflow.keras import Model
+from tensorflow.keras.layers import Input
 from tensorflow.keras import backend as K
-from tensorflow.keras.utils import Sequence
 from tensorflow.keras.optimizers import AdamW
-from tensorflow.keras.layers import Input, Layer
+from tensorflow.keras.utils import Sequence, SequenceEnqueuer
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    # Avoid spamming console output messages
 
 
 def cal_mrr(targets, preds, *args, **kwargs):
@@ -80,6 +82,8 @@ class DPRDataset(Sequence):
             for line in f:
                 qrel = json.loads(line.strip())
                 question = qrel["question"]
+                if question == "":
+                    continue
                 context_answers = qrel["context_answers"]
                 if len(context_answers) == 0:
                     continue
@@ -155,6 +159,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--shuffle", action="store_true")
     parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=0.001)
     parser.add_argument("--learning_rate_decay", type=float, default=0.01)
     parser.add_argument("--model_path", type=str, default="./models/universal-sentence-encoder-multilingual_3")
@@ -167,6 +172,8 @@ if __name__ == "__main__":
     parser.add_argument("--validation_step", type=int, default=10)
     args = parser.parse_args()
 
+    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
     training_dataset = DPRDataset(
         corpus_path=os.path.join(args.dataset_path, "corpus.jsonl"), 
         qrels_path=os.path.join(args.dataset_path, "qrel_train.jsonl"),
@@ -176,6 +183,9 @@ if __name__ == "__main__":
         hard_negative_path=os.path.join(args.dataset_path, "bm25_top1000.jsonl"),
         hard_negative_factor=args.hard_negative_factor,
     )
+    enqueuer = SequenceEnqueuer(training_dataset)
+    enqueuer.start(workers=args.workers, max_queue_size=10)
+    training_dataset = enqueuer.get()
     print(f"Training size: {len(training_dataset)}")
     if os.path.exists(os.path.join(args.dataset_path, "qrel_val.jsonl")):
         validation_dataset = DPRDataset(
@@ -247,11 +257,12 @@ if __name__ == "__main__":
                         best_score = val_metrics
                         tf.saved_model.save(hub_load, os.path.join(args.save_dir, args.save_name, "best_model"))
                         with open(os.path.join(args.save_dir, args.save_name, "best_scores.txt"), "a") as f:
-                            f.write(f"{best_score}\n")
+                            f.write(f"{best_score} - {epoch_idx}\n")
                 else:
                     tf.saved_model.save(hub_load, os.path.join(args.save_dir, args.save_name, "best_model"))
         training_dataset.on_epoch_end()
         K.set_value(trainer.optimizer.learning_rate, K.get_value(trainer.optimizer.learning_rate) * (1 - args.learning_rate_decay))
+    enqueuer.stop()
 
     # Validation step
     if "validation_dataset" in locals():
