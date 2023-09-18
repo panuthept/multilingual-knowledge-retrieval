@@ -1,8 +1,8 @@
 import json
 from tqdm import tqdm
 from mkr.retrievers.two_stage_retriever import TwoStageRetriever
-from mkr.retrievers.reranker import Reranker, RerankerConfig
 from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
+from mkr.retrievers.sparse_retriever import SparseRetriever, SparseRetrieverConfig
 
 
 def eval(corpus_name, qrels, retrieval):
@@ -23,7 +23,7 @@ def eval(corpus_name, qrels, retrieval):
         target_document_ids = set(target_document_ids)
         if len(target_document_ids) == 0:
             continue
-        topk_results = retrieval(corpus_name, query=question, top_ks=(10, 10))
+        topk_results = retrieval(corpus_name, query=question, top_ks=(1000, 1000))
         retrieved_doc_ids = [result["id"] for result in topk_results]
 
         for rank, retrieved_doc_id in enumerate(retrieved_doc_ids):
@@ -45,6 +45,13 @@ def eval(corpus_name, qrels, retrieval):
 
 if __name__ == "__main__":
     # Prepare retriever
+    sparse_retrieval = SparseRetriever(
+        SparseRetrieverConfig(
+            database_path="./database/BM25",
+        ),
+    )
+    sparse_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
+    sparse_retrieval.add_corpus("tydiqa_thai", "./corpus/tydiqa_thai/primary_corpus.jsonl")
     dense_retrieval = DenseRetriever(
         DenseRetrieverConfig(
             model_name="mUSE",
@@ -54,22 +61,13 @@ if __name__ == "__main__":
     dense_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
     dense_retrieval.add_corpus("tydiqa_thai", "./corpus/tydiqa_thai/primary_corpus.jsonl")
 
-    reranker = Reranker(
-        RerankerConfig(
-            model_name="mBERT",
-            database_path="./database/corpus_db",
-        ),
-    )
-    reranker.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
-    reranker.add_corpus("tydiqa_thai", "./corpus/tydiqa_thai/primary_corpus.jsonl")
-
-    doc_retrieval = TwoStageRetriever(dense_retrieval, reranker)
+    doc_retrieval = TwoStageRetriever(sparse_retrieval, dense_retrieval)
 
     # IAPP-WikiQA
     ####################################################################################
     # Load qrels
     qrels = {}  # {question: document_ids}
-    with open("./corpus/iapp_wiki_qa/qrels.jsonl", "r", encoding="utf-8") as f:
+    with open("./corpus/iapp_wiki_qa/qrel_train.jsonl", "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
             question = data["question"]

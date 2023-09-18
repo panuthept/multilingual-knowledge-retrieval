@@ -1,4 +1,5 @@
 import json
+import argparse
 from tqdm import tqdm
 from mkr.retrievers.hybrid_retriever import HybridRetriever
 from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
@@ -44,6 +45,10 @@ def eval(corpus_name, qrels, retrieval):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sparse_weight", type=float, default=0.5)
+    args = parser.parse_args()
+
     # Prepare retriever
     dense_retrieval = DenseRetriever(
         DenseRetrieverConfig(
@@ -62,13 +67,13 @@ if __name__ == "__main__":
     sparse_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
     sparse_retrieval.add_corpus("tydiqa_thai", "./corpus/tydiqa_thai/primary_corpus.jsonl")
 
-    doc_retrieval = HybridRetriever(dense_retrieval, sparse_retrieval)
+    doc_retrieval = HybridRetriever(dense_retrieval, sparse_retrieval, sparse_weight=args.sparse_weight)
 
     # IAPP-WikiQA
     ####################################################################################
     # Load qrels
     qrels = {}  # {question: document_ids}
-    with open("./corpus/iapp_wiki_qa/qrels.jsonl", "r", encoding="utf-8") as f:
+    with open("./corpus/iapp_wiki_qa/qrel_train.jsonl", "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
             question = data["question"]

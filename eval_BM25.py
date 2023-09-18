@@ -55,7 +55,7 @@ if __name__ == "__main__":
     ####################################################################################
     # Load qrels
     qrels = {}  # {question: document_ids}
-    with open("./corpus/iapp_wiki_qa/qrels.jsonl", "r", encoding="utf-8") as f:
+    with open("./corpus/iapp_wiki_qa/qrel_train.jsonl", "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
             question = data["question"]
