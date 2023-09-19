@@ -238,7 +238,7 @@ if __name__ == "__main__":
         with summary_writer.as_default():
             tf.summary.scalar("Valiation_Loss", val_losses, step)
             tf.summary.scalar("Valiation_MRR", val_metrics, step)
-        if val_metrics > best_score:
+        if val_metrics >= best_score:
             best_score = val_metrics
             tf.saved_model.save(hub_load, os.path.join(args.save_dir, args.save_name, "best_model"))
             with open(os.path.join(args.save_dir, args.save_name, "best_scores.txt"), "a") as f:
@@ -287,7 +287,7 @@ if __name__ == "__main__":
                     with summary_writer.as_default():
                         tf.summary.scalar("Valiation_Loss", val_losses, step)
                         tf.summary.scalar("Valiation_MRR", val_metrics, step)
-                    if val_metrics > best_score:
+                    if val_metrics >= best_score:
                         best_score = val_metrics
                         tf.saved_model.save(hub_load, os.path.join(args.save_dir, args.save_name, "best_model"))
                         with open(os.path.join(args.save_dir, args.save_name, "best_scores.txt"), "a") as f:
@@ -319,7 +319,7 @@ if __name__ == "__main__":
         with summary_writer.as_default():
             tf.summary.scalar("Valiation_Loss", val_losses, step)
             tf.summary.scalar("Valiation_MRR", val_metrics, step)
-        if val_metrics > best_score:
+        if val_metrics >= best_score:
             best_score = val_metrics
             tf.saved_model.save(hub_load, os.path.join(args.save_dir, args.save_name, "best_model"))
             with open(os.path.join(args.save_dir, args.save_name, "best_scores.txt"), "a") as f:
