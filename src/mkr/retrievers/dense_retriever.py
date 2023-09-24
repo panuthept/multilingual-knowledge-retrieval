@@ -5,9 +5,12 @@ from tqdm import trange
 from dataclasses import dataclass
 from typing import List, Dict, Any
 from mkr.databases.vector_db import VectorDB
+from mkr.models.mE5 import mE5SentenceEncoder
 from mkr.retrievers.baseclass import Retriever
 from mkr.models.mUSE import mUSESentenceEncoder
+from mkr.models.baseclass import SentenceEncoder
 from mkr.utilities.general_utils import read_corpus
+from mkr.models.mContriever import mContrieverSentenceEncoder
 from mkr.resources.resource_constant import ENCODER_COLLECTION
 
 
@@ -22,14 +25,18 @@ class DenseRetriever(Retriever):
         self.model_name = config.model_name
         self.database_path = config.database_path
 
-        self.encoder = self._load_encoder(self.model_name)
+        self.encoder: SentenceEncoder = self._load_encoder(self.model_name)
         self.vector_db = VectorDB(self.database_path)
 
-    def _load_encoder(self, model_name: str):
+    def _load_encoder(self, model_name: str) -> SentenceEncoder:
         # Load encoder
+        assert model_name in ENCODER_COLLECTION, f"Unknown encoder: {model_name}"
         if "mUSE" in model_name:
-            assert model_name in ENCODER_COLLECTION, f"Unknown encoder: {model_name}"
             encoder = mUSESentenceEncoder(model_name)
+        elif "mE5" in model_name:
+            encoder = mE5SentenceEncoder(model_name)
+        elif "mContriever" in model_name:
+            encoder = mContrieverSentenceEncoder(model_name)
         else:
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder
@@ -48,7 +55,7 @@ class DenseRetriever(Retriever):
             batch_metadata = [doc["metadata"] for doc in batch_corpus]
             batch_titles = [metadata["title"] for metadata in batch_metadata]
             batch_contents = [f"{title}\n{content}" for title, content in zip(batch_titles, batch_contents)]
-            batch_embeddings = self.encoder.encode_batch(batch_contents, batch_size=batch_size)
+            batch_embeddings = self.encoder.encode_passages(batch_contents)
             # Add to database
             vector_collection.add(
                 ids=batch_ids,
@@ -67,7 +74,7 @@ class DenseRetriever(Retriever):
             candidate_ids: List[str] = None
         ) -> List[Dict[str, Any]]:
         vector_collection = self.vector_db.create_or_get_collection(corpus_name)
-        query_embedding = self.encoder.encode(query)
+        query_embedding = self.encoder.encode_queries(query)
         # Retrieve documents
         results = vector_collection.search(query_embedding, top_k=top_k, candidate_ids=candidate_ids)
         return results

@@ -2,6 +2,7 @@ import os
 import gdown
 import shutil
 from typing import Dict
+from transformers import AutoTokenizer, AutoModel
 from mkr.resources.resource_constant import CORPUS_COLLECTION, ENCODER_COLLECTION, INDEX_COLLECTION
 
 
@@ -9,6 +10,13 @@ class ResourceManager:
     def __init__(self, resource_dir: str = "./", force_download: bool = False):
         self.resource_dir = resource_dir
         self.force_download = force_download
+
+    def download_resource_from_huggingface(self, resource_details: Dict[str, str], file_dir: str):
+        tokenizer = AutoTokenizer.from_pretrained(resource_details["download_url"])
+        model = AutoModel.from_pretrained(resource_details["download_url"])
+        # Save tokenizer and model
+        tokenizer.save_pretrained(file_dir)
+        model.save_pretrained(file_dir)
 
     def download_resource_if_needed(self, resource_details: Dict[str, str], force_download: bool = False):
         force_download = force_download or self.force_download
@@ -21,14 +29,17 @@ class ResourceManager:
         if os.path.exists(file_dir) and not force_download:
             return
         # Download the resource
-        download_url = resource_details["download_url"]
-        download_output = os.path.join(local_dir, resource_details["download_output"])
-        if not os.path.exists(download_output):
-            gdown.download(download_url, download_output, quiet=False)
-        # Process the downloaded file
-        if resource_details["zip_file"]:
-            shutil.unpack_archive(download_output, local_dir)
-            os.remove(download_output)
+        if resource_details["download_method"] == "huggingface":
+            self.download_resource_from_huggingface(resource_details, file_dir)
+        else:
+            download_url = resource_details["download_url"]
+            download_output = os.path.join(local_dir, resource_details["download_output"])
+            if not os.path.exists(download_output):
+                gdown.download(download_url, download_output, quiet=False)
+            # Process the downloaded file
+            if resource_details["zip_file"]:
+                shutil.unpack_archive(download_output, local_dir)
+                os.remove(download_output)
 
     def get_corpus_path(self, corpus_name: str, download: bool = True, force_download: bool = False):
         if download:

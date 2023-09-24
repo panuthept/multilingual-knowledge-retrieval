@@ -12,7 +12,37 @@ ENCODER_COLLECTION = {
         "download_url": None,
         "download_output": None,
         "zip_file": True,
-    }
+    },
+    "mE5_base": {
+        "local_dir": "models",
+        "file_name": "multilingual-e5-base",
+        "download_method": "huggingface",
+        "download_url": "intfloat/multilingual-e5-base",
+    },
+    "mE5_small": {
+        "local_dir": "models",
+        "file_name": "multilingual-e5-small",
+        "download_method": "huggingface",
+        "download_url": "intfloat/multilingual-e5-small",
+    },
+    "mE5_large": {
+        "local_dir": "models",
+        "file_name": "multilingual-e5-large",
+        "download_method": "huggingface",
+        "download_url": "intfloat/multilingual-e5-large",
+    },
+    "mContriever": {
+        "local_dir": "models",
+        "file_name": "mcontriever",
+        "download_method": "huggingface",
+        "download_url": "facebook/mcontriever",
+    },
+    "mContriever_msmarco": {
+        "local_dir": "models",
+        "file_name": "mcontriever-msmarco",
+        "download_method": "huggingface",
+        "download_url": "facebook/mcontriever-msmarco",
+    },
 }
 
 CORPUS_COLLECTION = {
