@@ -171,6 +171,12 @@ class VectorDB:
         if name not in self.collections:
             self.collections[name] = VectorCollection(self.collection_paths[name])
         return self.collections[name]
+    
+    def get_collection(self, name: str) -> VectorCollection:
+        assert name in self.collection_paths, f"Collection not found: {name}"
+        if name not in self.collections:
+            self.collections[name] = VectorCollection(self.collection_paths[name])
+        return self.collections[name]
 
     def save(self):
         # Create save_dir if not exists

@@ -42,7 +42,7 @@ class SparseRetriever(Retriever):
             top_k: int = 3, 
             candidate_ids: List[str] = None
         ) -> List[Dict[str, Any]]:
-        bm25_collection = self.bm25_db.create_or_get_collection(corpus_name)
+        bm25_collection = self.bm25_db.get_collection(corpus_name)
         # Retrieve documents
         results = bm25_collection.search(query, top_k=top_k, candidate_ids=candidate_ids)
         return results
