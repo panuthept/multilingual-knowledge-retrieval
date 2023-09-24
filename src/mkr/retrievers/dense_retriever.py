@@ -53,8 +53,8 @@ class DenseRetriever(Retriever):
             batch_ids = [doc["hash"] for doc in batch_corpus]
             batch_contents = [doc["content"] for doc in batch_corpus]
             batch_metadata = [doc["metadata"] for doc in batch_corpus]
-            batch_titles = [metadata["title"] for metadata in batch_metadata]
-            batch_contents = [f"{title}\n{content}" for title, content in zip(batch_titles, batch_contents)]
+            batch_titles = [metadata["title"] if "title" in metadata else None for metadata in batch_metadata]
+            batch_contents = [f"{title}\n{content}" if title is not None else content for title, content in zip(batch_titles, batch_contents)]
             batch_embeddings = self.encoder.encode_passages(batch_contents)
             # Add to database
             vector_collection.add(

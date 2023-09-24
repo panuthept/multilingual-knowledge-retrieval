@@ -66,7 +66,34 @@ CORPUS_COLLECTION = {
         "download_url": "https://drive.google.com/uc?id=1lkMQ189Xq1csyBJN9HmMJV3FMAwTjAb4",
         "download_output": "thaiwikipedia_v2.csv.zip",
         "zip_file": True,
-    }
+    },
+    "iapp_wiki_qa": {
+        "local_dir": "corpus/iapp_wiki_qa",
+    },
+    "tydiqa": {
+        "local_dir": "corpus/tydiqa",
+    },
+    "xquad": {
+        "local_dir": "corpus/xquad",
+    },
+    "miracl": {
+        "local_dir": "corpus/miracl",
+    },
+}
+
+DATASET_COLLECTION = {
+    "iapp_wiki_qa": {
+        "local_dir": "datasets/iapp_wiki_qa",
+    },
+    "tydiqa": {
+        "local_dir": "datasets/tydiqa",
+    },
+    "xquad": {
+        "local_dir": "datasets/xquad",
+    },
+    "miracl": {
+        "local_dir": "datasets/miracl",
+    },
 }
 
 INDEX_COLLECTION = {

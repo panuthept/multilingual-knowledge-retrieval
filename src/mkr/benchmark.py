@@ -1,8 +1,11 @@
+import os
 import math
+import json
 from tqdm import tqdm
 from typing import Dict, List
 from dataclasses import dataclass, field
 from mkr.retrievers.baseclass import Retriever
+from mkr.resources.resource_manager import ResourceManager
 
 
 @dataclass
@@ -26,10 +29,19 @@ class Metrics:
 
 
 class Benchmark:
-    def __init__(self, retriever: Retriever):
+    def __init__(self, resource_management: ResourceManager, retriever: Retriever):
+        self.resource_management = resource_management
         self.retriever = retriever
 
-    def evaluate(self, corpus_name: str, qrels: List[Dict[str, List[str]]]) -> Dict[str, float]:
+    def get_qrels(self, dataset_path: str):
+        # Load qrels
+        qrels = []
+        with open(os.path.join(dataset_path, "qrel_test.jsonl"), "r", encoding="utf-8") as f:
+            for line in f:
+                qrels.append(json.loads(line))
+        return qrels
+
+    def evaluate_on_dataset(self, corpus_name: str, qrels: List[Dict[str, List[str]]]) -> Dict[str, float]:
         # Intiial metrics
         metrics = Metrics()
         for qrel in tqdm(qrels, desc="Evaluating"):
@@ -53,3 +65,18 @@ class Benchmark:
             "R@5": metrics.get_recall(k=5),
             "R@1000": metrics.get_recall(k=1000),
         }
+    
+    def evaluate_on_datasets(self, dataset_names: List[str]):
+        for dataset_name in dataset_names:
+            # Get dataset path
+            dataset_path = self.resource_management.get_dataset_path(dataset_name)
+            # Get qrels
+            qrels = self.get_qrels(dataset_path)
+            # Evaluate
+            results = self.evaluate_on_dataset(dataset_name, qrels)
+            # Report results
+            print("*" * 50)
+            print(f"Dataset: {dataset_name.upper()}")
+            for key, values in results.items():
+                print(f"{key}: {values * 100:.1f}")
+            print("*" * 50)

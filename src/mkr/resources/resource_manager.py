@@ -3,7 +3,7 @@ import gdown
 import shutil
 from typing import Dict
 from transformers import AutoTokenizer, AutoModel
-from mkr.resources.resource_constant import CORPUS_COLLECTION, ENCODER_COLLECTION, INDEX_COLLECTION
+from mkr.resources.resource_constant import CORPUS_COLLECTION, DATASET_COLLECTION, ENCODER_COLLECTION, INDEX_COLLECTION
 
 
 class ResourceManager:
@@ -42,16 +42,25 @@ class ResourceManager:
                 os.remove(download_output)
 
     def get_corpus_path(self, corpus_name: str, download: bool = True, force_download: bool = False):
-        if download:
-            self.download_resource_if_needed(CORPUS_COLLECTION[corpus_name], force_download=force_download)
+        # if download:
+        #     self.download_resource_if_needed(CORPUS_COLLECTION[corpus_name], force_download=force_download)
 
         if corpus_name in CORPUS_COLLECTION:
             resource_details = CORPUS_COLLECTION[corpus_name]
-            corpus_path = os.path.join(
-                self.resource_dir, resource_details["local_dir"], resource_details["file_name"]
-            )
+            corpus_path = os.path.join(self.resource_dir, resource_details["local_dir"])
         else:
             raise ValueError(f"Unknown corpus: {corpus_name}")
+        return corpus_path
+    
+    def get_dataset_path(self, dataset_name: str, download: bool = True, force_download: bool = False):
+        # if download:
+        #     self.download_resource_if_needed(DATASET_COLLECTION[dataset_name], force_download=force_download)
+
+        if dataset_name in DATASET_COLLECTION:
+            resource_details = DATASET_COLLECTION[dataset_name]
+            corpus_path = os.path.join(self.resource_dir, resource_details["local_dir"])
+        else:
+            raise ValueError(f"Unknown corpus: {dataset_name}")
         return corpus_path
 
     def get_encoder_path(self, encoder_name: str, download: bool = True, force_download: bool = False):

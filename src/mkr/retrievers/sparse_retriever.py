@@ -28,7 +28,7 @@ class SparseRetriever(Retriever):
         for doc in tqdm(corpus):
             bm25_collection.add(
                 ids=[doc["hash"]],
-                contents=[f"{doc['metadata']['title']}\n{doc['content']}"],
+                contents=[f"{doc['metadata']['title']}\n{doc['content']}"] if "title" in doc["metadata"] else [doc["content"]],
                 metadatas=[doc["metadata"]],
             )
         bm25_collection.create_engine()
