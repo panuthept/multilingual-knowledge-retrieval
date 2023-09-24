@@ -18,8 +18,8 @@ class mE5SentenceEncoder(SentenceEncoder):
         last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
         return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
     
-    def _encode(self, queries: List[str]) -> Tensor:
-        inputs = self.tokenizer(queries, max_length=512, padding=True, truncation=True, return_tensors="pt")
+    def _encode(self, texts: List[str]) -> Tensor:
+        inputs = self.tokenizer(texts, max_length=512, padding=True, truncation=True, return_tensors="pt")
         outputs = self.model(**inputs)
         embeddings = self._average_pooling(outputs.last_hidden_state, inputs["attention_mask"])
         embeddings = F.normalize(embeddings, p=2, dim=1)
@@ -27,11 +27,11 @@ class mE5SentenceEncoder(SentenceEncoder):
     
     def _encode_queries(self, queries: List[str]) -> Tensor:
         queries = [f"query: {query}" for query in queries]
-        return self._encode(queries)
+        return self._encode(queries).detach()
     
     def _encode_passages(self, passages: List[str]) -> Tensor:
         passages = [f"passage: {passage}" for passage in passages]
-        return self._encode(passages)
+        return self._encode(passages).detach()
     
     @property
     def available_models(self):

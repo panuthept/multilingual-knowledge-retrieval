@@ -18,7 +18,7 @@ class SentenceEncoder(ABC):
         embedings = self._encode_queries(queries)
         # Cast to numpy
         if return_numpy:
-            embedings = embedings.detach().numpy()
+            embedings = embedings.numpy()
         return embedings
     
     def encode_passages(self, passages: Union[List[str], str], return_numpy: bool = True):
@@ -28,6 +28,6 @@ class SentenceEncoder(ABC):
         embedings = self._encode_passages(passages)
         # Cast to numpy
         if return_numpy:
-            embedings = embedings.detach().numpy()
+            embedings = embedings.numpy()
         return embedings
         

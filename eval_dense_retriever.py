@@ -1,13 +1,19 @@
 import json
+import argparse
 from mkr.benchmark import Benchmark
-from mkr.retrievers.sparse_retriever import SparseRetriever, SparseRetrieverConfig
+from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_name", type=str, default="mUSE")
+    args = parser.parse_args()
+
     # Prepare retriever
-    doc_retrieval = SparseRetriever(
-        SparseRetrieverConfig(
-            database_path="./database/BM25",
+    doc_retrieval = DenseRetriever(
+        DenseRetrieverConfig(
+            model_name=args.model_name,
+            database_path=f"./database/{args.model_name}",
         ),
     )
     doc_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")

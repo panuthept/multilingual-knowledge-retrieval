@@ -1,6 +1,5 @@
 from typing import List
 from torch import Tensor
-from torch.functional import F
 from mkr.models.baseclass import SentenceEncoder
 from transformers import AutoTokenizer, AutoModel
 from mkr.resources.resource_manager import ResourceManager
@@ -23,14 +22,13 @@ class mContrieverSentenceEncoder(SentenceEncoder):
         inputs = self.tokenizer(queries, max_length=512, padding=True, truncation=True, return_tensors="pt")
         outputs = self.model(**inputs)
         embeddings = self._mean_pooling(outputs[0], inputs["attention_mask"])
-        embeddings = F.normalize(embeddings, p=2, dim=1)
         return embeddings
     
     def _encode_queries(self, queries: List[str]) -> Tensor:
-        return self._encode(queries)
+        return self._encode(queries).detach()
     
     def _encode_passages(self, passages: List[str]) -> Tensor:
-        return self._encode(passages)
+        return self._encode(passages).detach()
     
     @property
     def available_models(self):
