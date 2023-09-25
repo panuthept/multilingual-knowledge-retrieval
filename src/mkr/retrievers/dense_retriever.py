@@ -8,6 +8,7 @@ from mkr.databases.vector_db import VectorDB
 from mkr.models.mE5 import mE5SentenceEncoder
 from mkr.retrievers.baseclass import Retriever
 from mkr.models.mUSE import mUSESentenceEncoder
+from mkr.models.mDPR import mDPRSentenceEncoder
 from mkr.models.baseclass import SentenceEncoder
 from mkr.utilities.general_utils import read_corpus
 from mkr.models.mContriever import mContrieverSentenceEncoder
@@ -37,6 +38,8 @@ class DenseRetriever(Retriever):
             encoder = mE5SentenceEncoder(model_name)
         elif "mContriever" in model_name:
             encoder = mContrieverSentenceEncoder(model_name)
+        elif "mDPR" in model_name:
+            encoder = mDPRSentenceEncoder(model_name)
         else:
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder

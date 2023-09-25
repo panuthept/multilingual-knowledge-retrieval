@@ -20,17 +20,18 @@ class ResourceManager:
 
     def download_resource_if_needed(self, resource_details: Dict[str, str], force_download: bool = False):
         force_download = force_download or self.force_download
-        # Create local_dir if not exists
+        # Create base_dir if not exists
         local_dir = os.path.join(self.resource_dir, resource_details["local_dir"])
-        if not os.path.exists(local_dir):
-            os.makedirs(local_dir)
+        base_dir = os.path.dirname(local_dir)
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
         # Check if the resource is already downloaded
-        file_dir = os.path.join(local_dir, resource_details["file_name"])
-        if os.path.exists(file_dir) and not force_download:
+        if os.path.exists(local_dir) and not force_download:
             return
+        
         # Download the resource
         if resource_details["download_method"] == "huggingface":
-            self.download_resource_from_huggingface(resource_details, file_dir)
+            self.download_resource_from_huggingface(resource_details, local_dir)
         else:
             download_url = resource_details["download_url"]
             download_output = os.path.join(local_dir, resource_details["download_output"])
@@ -69,9 +70,7 @@ class ResourceManager:
 
         if encoder_name in ENCODER_COLLECTION:
             resource_details = ENCODER_COLLECTION[encoder_name]
-            encoder_path = os.path.join(
-                self.resource_dir, resource_details["local_dir"], resource_details["file_name"]
-            )
+            encoder_path = os.path.join(self.resource_dir, resource_details["local_dir"])
         else:
             raise ValueError(f"Unknown encoder: {encoder_name}")
         return encoder_path
