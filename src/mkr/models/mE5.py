@@ -1,3 +1,4 @@
+import torch
 from typing import List
 from torch import Tensor
 from torch.functional import F
@@ -13,6 +14,11 @@ class mE5SentenceEncoder(SentenceEncoder):
         self.resource_manager = ResourceManager()
         self.tokenizer = AutoTokenizer.from_pretrained(self.resource_manager.get_encoder_path(model_name))
         self.model = AutoModel.from_pretrained(self.resource_manager.get_encoder_path(model_name))
+        self.model.eval()
+
+        # Use GPU if available
+        if torch.cuda.is_available():
+            self.model = self.model.cuda()
 
     def _average_pooling(self, last_hidden_states: Tensor, attention_mask: Tensor) -> Tensor:
         last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
@@ -20,9 +26,17 @@ class mE5SentenceEncoder(SentenceEncoder):
     
     def _encode(self, texts: List[str]) -> Tensor:
         inputs = self.tokenizer(texts, max_length=512, padding=True, truncation=True, return_tensors="pt")
+        # Use GPU if available
+        if torch.cuda.is_available():
+            inputs = {key: value.cuda() for key, value in inputs.items()}
+
         outputs = self.model(**inputs)
         embeddings = self._average_pooling(outputs.last_hidden_state, inputs["attention_mask"])
         embeddings = F.normalize(embeddings, p=2, dim=1)
+
+        # Move to CPU if needed
+        if torch.cuda.is_available():
+            embeddings = embeddings.cpu()
         return embeddings
     
     def _encode_queries(self, queries: List[str]) -> Tensor:

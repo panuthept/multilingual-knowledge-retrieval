@@ -1,3 +1,4 @@
+import torch
 from typing import List
 from torch import Tensor
 from mkr.models.baseclass import SentenceEncoder
@@ -12,6 +13,11 @@ class mContrieverSentenceEncoder(SentenceEncoder):
         self.resource_manager = ResourceManager()
         self.tokenizer = AutoTokenizer.from_pretrained(self.resource_manager.get_encoder_path(model_name))
         self.model = AutoModel.from_pretrained(self.resource_manager.get_encoder_path(model_name))
+        self.model.eval()
+
+        # Use GPU if available
+        if torch.cuda.is_available():
+            self.model = self.model.cuda()
 
     def _mean_pooling(self, token_embeddings, mask):
         token_embeddings = token_embeddings.masked_fill(~mask[..., None].bool(), 0.)
@@ -20,8 +26,16 @@ class mContrieverSentenceEncoder(SentenceEncoder):
     
     def _encode(self, queries: List[str]) -> Tensor:
         inputs = self.tokenizer(queries, max_length=512, padding=True, truncation=True, return_tensors="pt")
+        # Use GPU if available
+        if torch.cuda.is_available():
+            inputs = {key: value.cuda() for key, value in inputs.items()}
+
         outputs = self.model(**inputs)
         embeddings = self._mean_pooling(outputs[0], inputs["attention_mask"])
+
+        # Move to CPU if needed
+        if torch.cuda.is_available():
+            embeddings = embeddings.cpu()
         return embeddings
     
     def _encode_queries(self, queries: List[str]) -> Tensor:
