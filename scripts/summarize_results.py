@@ -18,6 +18,8 @@ if __name__ == "__main__":
             if dataset_name is not None:
                 if line.startswith("MRR:"):
                     results[dataset_name]["MRR"] = float(line.strip().split(": ")[-1])
+                elif line.startswith("R@1"):
+                    results[dataset_name]["R@1"] = float(line.strip().split(": ")[-1])
                 elif line.startswith("R@5"):
                     results[dataset_name]["R@5"] = float(line.strip().split(": ")[-1])
                 elif line.startswith("R@1000"):
@@ -26,6 +28,7 @@ if __name__ == "__main__":
     # Average results
     datasets_num = len(results)
     results["AVERAGE"]["MRR"] = round(sum([results[dataset_name]["MRR"] for dataset_name in results]) / datasets_num, 1)
+    results["AVERAGE"]["R@1"] = round(sum([results[dataset_name]["R@1"] for dataset_name in results]) / datasets_num, 1)
     results["AVERAGE"]["R@5"] = round(sum([results[dataset_name]["R@5"] for dataset_name in results]) / datasets_num, 1)
     results["AVERAGE"]["R@1000"] = round(sum([results[dataset_name]["R@1000"] for dataset_name in results]) / datasets_num, 1)
     

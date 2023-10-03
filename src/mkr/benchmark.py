@@ -62,6 +62,7 @@ class Benchmark:
         # Get metrics
         return {
             "MRR": metrics.get_mrr(k=1000),
+            "R@1": metrics.get_recall(k=1),
             "R@5": metrics.get_recall(k=5),
             "R@1000": metrics.get_recall(k=1000),
         }
