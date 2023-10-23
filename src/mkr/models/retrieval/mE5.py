@@ -2,8 +2,8 @@ import torch
 from typing import List
 from torch import Tensor
 from torch.functional import F
-from mkr.models.baseclass import SentenceEncoder
 from transformers import AutoTokenizer, AutoModel
+from mkr.models.retrieval.baseclass import SentenceEncoder
 from mkr.resources.resource_manager import ResourceManager
 
 

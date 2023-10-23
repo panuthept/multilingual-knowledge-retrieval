@@ -5,12 +5,12 @@ from hashlib import sha256
 
 
 if __name__ == "__main__":
-    dataset = json.load(open("./corpus/iapp_wiki_qa/iapp-thai-wikipedia-qa-1961-docs-9170-questions.json", "rb"))
+    dataset = json.load(open("./corpus/iapp_wiki_qa_original/iapp-thai-wikipedia-qa-1961-docs-9170-questions.json", "rb"))
 
-    if not os.path.exists("./corpus/iapp_wiki_qa"):
-        os.makedirs("./corpus/iapp_wiki_qa")
+    if not os.path.exists("./corpus/iapp_wiki_qa_original"):
+        os.makedirs("./corpus/iapp_wiki_qa_original")
     else:
-        if os.path.exists("./corpus/iapp_wiki_qa/corpus.jsonl"):
+        if os.path.exists("./corpus/iapp_wiki_qa_original/corpus.jsonl"):
             raise Exception("Corpus already exists!")
 
     qrels = {}
@@ -27,7 +27,7 @@ if __name__ == "__main__":
             # Skip duplicate documents
             if content_hash not in index:
                 # Add document to corpus
-                with open(f"./corpus/iapp_wiki_qa/corpus.jsonl", "a", encoding="utf-8") as f:
+                with open(f"./corpus/iapp_wiki_qa_original/corpus.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps({
                         "hash": content_hash,
                         "content": content,
@@ -65,8 +65,8 @@ if __name__ == "__main__":
             "context_answers": {context_identifier: list(answer) for context_identifier, answer in context_answers.items()}
         })
 
-    json.dump(index, open("./corpus/iapp_wiki_qa/corpus_index.json", "w", encoding="utf-8"))
+    json.dump(index, open("./corpus/iapp_wiki_qa_original/corpus_index.json", "w", encoding="utf-8"))
     # Save qrels as a jsonl file
-    with open("./corpus/iapp_wiki_qa/qrels.jsonl", "w", encoding="utf-8") as f:
+    with open("./corpus/iapp_wiki_qa_original/qrels.jsonl", "w", encoding="utf-8") as f:
         for qrel in lst_qrels:
             f.write(json.dumps(qrel, ensure_ascii=False) + "\n")

@@ -5,7 +5,7 @@ from hashlib import sha256
 from datasets import load_dataset
 
 
-corpus_name = "tydiqa_thai"
+corpus_name = "tydiqa_original"
 
 
 def get_primary_data(split="train", index=None):

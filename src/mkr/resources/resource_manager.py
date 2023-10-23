@@ -2,14 +2,24 @@ import os
 import gdown
 import shutil
 from typing import Dict
-from transformers import AutoTokenizer, AutoModel
-from mkr.resources.resource_constant import CORPUS_COLLECTION, DATASET_COLLECTION, ENCODER_COLLECTION, INDEX_COLLECTION
+from transformers import AutoTokenizer, AutoModel, AutoModelForQuestionAnswering
+from mkr.resources.resource_constant import CORPUS_COLLECTION, RETRIEVAL_DATASET_COLLECTION, QA_DATASET_COLLECTION, ENCODER_COLLECTION, INDEX_COLLECTION, EXTRACTIVEQA_COLLECTION
 
 
 class ResourceManager:
     def __init__(self, resource_dir: str = "./", force_download: bool = False):
         self.resource_dir = resource_dir
         self.force_download = force_download
+
+    def download_hf_model(self, model_name: str, model_type: str, file_dir: str):
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        if model_type == "question_answering":
+            model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+        else:
+            model = AutoModel.from_pretrained(model_name)
+        # Save tokenizer and model
+        tokenizer.save_pretrained(file_dir)
+        model.save_pretrained(file_dir)
 
     def download_resource_from_huggingface(self, resource_details: Dict[str, str], file_dir: str):
         tokenizer = AutoTokenizer.from_pretrained(resource_details["download_url"])
@@ -53,16 +63,30 @@ class ResourceManager:
             raise ValueError(f"Unknown corpus: {corpus_name}")
         return corpus_path
     
-    def get_dataset_path(self, dataset_name: str, download: bool = True, force_download: bool = False):
-        # if download:
-        #     self.download_resource_if_needed(DATASET_COLLECTION[dataset_name], force_download=force_download)
+    def get_dataset_path(self, dataset_name: str, dataset_type: str, download: bool = True, force_download: bool = False):
+        if dataset_type == "question_answering":
+            assert dataset_name in QA_DATASET_COLLECTION, f"Unknown dataset name: {dataset_name}"
+            resource_details = QA_DATASET_COLLECTION[dataset_name]
+        elif dataset_type == "retrieval":
+            assert dataset_name in RETRIEVAL_DATASET_COLLECTION, f"Unknown dataset name: {dataset_name}"
+            resource_details = RETRIEVAL_DATASET_COLLECTION[dataset_name]
 
-        if dataset_name in DATASET_COLLECTION:
-            resource_details = DATASET_COLLECTION[dataset_name]
-            corpus_path = os.path.join(self.resource_dir, resource_details["local_dir"])
-        else:
-            raise ValueError(f"Unknown corpus: {dataset_name}")
-        return corpus_path
+        dataset_path = os.path.join(self.resource_dir, resource_details["local_dir"])
+        return dataset_path
+    
+    def get_model_path(self, model_name: str, model_type: str, download: bool = True, force_download: bool = False):
+        if model_type == "extractive_question_answering":
+            assert model_name in EXTRACTIVEQA_COLLECTION, f"Unknown model name: {model_name}"
+            resource_details = EXTRACTIVEQA_COLLECTION[model_name]
+        elif model_type == "retrieval":
+            assert model_name in ENCODER_COLLECTION, f"Unknown model name: {model_name}"
+            resource_details = ENCODER_COLLECTION[model_name]
+
+        if force_download or (download and not os.path.exists(resource_details["local_dir"])):
+            self.download_hf_model(model_name=resource_details["hf_model_name"], model_type=resource_details["hf_model_type"], file_dir=resource_details["local_dir"])
+
+        encoder_path = os.path.join(self.resource_dir, resource_details["local_dir"])
+        return encoder_path
 
     def get_encoder_path(self, encoder_name: str, download: bool = True, force_download: bool = False):
         if download:

@@ -5,14 +5,14 @@ from tqdm import trange
 from dataclasses import dataclass
 from typing import List, Dict, Any
 from mkr.databases.vector_db import VectorDB
-from mkr.models.mE5 import mE5SentenceEncoder
 from mkr.retrievers.baseclass import Retriever
-from mkr.models.mUSE import mUSESentenceEncoder
-from mkr.models.mDPR import mDPRSentenceEncoder
-from mkr.models.baseclass import SentenceEncoder
 from mkr.utilities.general_utils import read_corpus
-from mkr.models.mContriever import mContrieverSentenceEncoder
+from mkr.models.retrieval.mE5 import mE5SentenceEncoder
+from mkr.models.retrieval.mUSE import mUSESentenceEncoder
+from mkr.models.retrieval.mDPR import mDPRSentenceEncoder
+from mkr.models.retrieval.baseclass import SentenceEncoder
 from mkr.resources.resource_constant import ENCODER_COLLECTION
+from mkr.models.retrieval.mContriever import mContrieverSentenceEncoder
 
 
 @dataclass

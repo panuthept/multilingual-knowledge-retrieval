@@ -1,3 +1,11 @@
+EXTRACTIVEQA_COLLECTION = {
+    "mRoBERTa": {
+        "local_dir": "models/alon-albalak/xlm-roberta-base-xquad",
+        "hf_model_name": "alon-albalak/xlm-roberta-base-xquad",
+        "hf_model_type": "question_answering",
+    }
+}
+
 ENCODER_COLLECTION = {
     "mUSE": {
         "local_dir": "models/universal-sentence-encoder-multilingual_3",
@@ -108,18 +116,30 @@ CORPUS_COLLECTION = {
     },
 }
 
-DATASET_COLLECTION = {
+RETRIEVAL_DATASET_COLLECTION = {
     "iapp_wiki_qa": {
-        "local_dir": "datasets/iapp_wiki_qa",
+        "local_dir": "datasets/retrieval/iapp_wiki_qa",
     },
     "tydiqa": {
-        "local_dir": "datasets/tydiqa",
+        "local_dir": "datasets/retrieval/tydiqa",
     },
     "xquad": {
-        "local_dir": "datasets/xquad",
+        "local_dir": "datasets/retrieval/xquad",
     },
     "miracl": {
-        "local_dir": "datasets/miracl",
+        "local_dir": "datasets/retrieval/miracl",
+    },
+}
+
+QA_DATASET_COLLECTION = {
+    "iapp_wiki_qa": {
+        "local_dir": "datasets/question_answering/iapp_wiki_qa",
+    },
+    "tydiqa": {
+        "local_dir": "datasets/question_answering/tydiqa",
+    },
+    "xquad": {
+        "local_dir": "datasets/question_answering/xquad",
     },
 }
 

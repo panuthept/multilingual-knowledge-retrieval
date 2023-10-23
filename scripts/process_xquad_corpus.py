@@ -5,7 +5,7 @@ from hashlib import sha256
 from datasets import load_dataset
 
 
-corpus_name = "xquad"
+corpus_name = "xquad_original"
 
 
 def get_data():
