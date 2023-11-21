@@ -10,13 +10,15 @@ ENCODER_COLLECTION = {
     "mUSE": {
         "local_dir": "models/universal-sentence-encoder-multilingual_3",
         "file_name": "universal-sentence-encoder-multilingual_3",
+        "download_method": "gdrive",
         "download_url": "https://drive.google.com/uc?id=1MjDW6c2It-TM0YGoaYNh3Rq5P3cKvQRn",
         "download_output": "universal-sentence-encoder-multilingual_3.zip",
         "zip_file": True,
     },
-    "finetuned_mUSE": {
-        "local_dir": "models/finetuned_mUSE",
-        "file_name": "finetuned_mUSE",
+    "CL_ReLKT": {
+        "local_dir": "models/student_best_supported_languages",
+        "file_name": "student_best_supported_languages",
+        "download_method": None,
         "download_url": None,
         "download_output": None,
         "zip_file": True,
@@ -123,8 +125,17 @@ RETRIEVAL_DATASET_COLLECTION = {
     "tydiqa": {
         "local_dir": "datasets/retrieval/tydiqa",
     },
-    "xquad": {
-        "local_dir": "datasets/retrieval/xquad",
+    "th_xquad": {
+        "local_dir": "datasets/retrieval/th_xquad",
+    },
+    "en_xquad": {
+        "local_dir": "datasets/retrieval/en_xquad",
+    },
+    "th_en_xquad": {
+        "local_dir": "datasets/retrieval/th_en_xquad",
+    },
+    "en_th_xquad": {
+        "local_dir": "datasets/retrieval/en_th_xquad",
     },
     "miracl": {
         "local_dir": "datasets/retrieval/miracl",
@@ -138,8 +149,17 @@ QA_DATASET_COLLECTION = {
     "tydiqa": {
         "local_dir": "datasets/question_answering/tydiqa",
     },
-    "xquad": {
-        "local_dir": "datasets/question_answering/xquad",
+    "th_xquad": {
+        "local_dir": "datasets/question_answering/th_xquad",
+    },
+    "en_xquad": {
+        "local_dir": "datasets/question_answering/en_xquad",
+    },
+    "th_en_xquad": {
+        "local_dir": "datasets/question_answering/th_en_xquad",
+    },
+    "en_th_xquad": {
+        "local_dir": "datasets/question_answering/en_th_xquad",
     },
 }
 

@@ -44,12 +44,12 @@ class ResourceManager:
             self.download_resource_from_huggingface(resource_details, local_dir)
         else:
             download_url = resource_details["download_url"]
-            download_output = os.path.join(local_dir, resource_details["download_output"])
+            download_output = os.path.join(base_dir, resource_details["download_output"])
             if not os.path.exists(download_output):
                 gdown.download(download_url, download_output, quiet=False)
             # Process the downloaded file
             if resource_details["zip_file"]:
-                shutil.unpack_archive(download_output, local_dir)
+                shutil.unpack_archive(download_output, base_dir)
                 os.remove(download_output)
 
     def get_corpus_path(self, corpus_name: str, download: bool = True, force_download: bool = False):

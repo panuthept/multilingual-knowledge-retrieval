@@ -23,9 +23,15 @@ class mUSESentenceEncoder(SentenceEncoder):
     
 
 if __name__ == "__main__":
-    encoder = mUSESentenceEncoder()
-
     english_sentences = ["dog", "Puppies are nice.", "I enjoy taking long walks along the beach with my dog."]
+
+    encoder = mUSESentenceEncoder(model_name="mUSE")
+    en_emb = encoder.encode_queries(english_sentences)
+    print(en_emb.shape)
+    en_emb = encoder.encode_passages(english_sentences)
+    print(en_emb.shape)
+
+    encoder = mUSESentenceEncoder(model_name="CL_ReLKT")
     en_emb = encoder.encode_queries(english_sentences)
     print(en_emb.shape)
     en_emb = encoder.encode_passages(english_sentences)

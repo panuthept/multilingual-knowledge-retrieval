@@ -32,7 +32,7 @@ class DenseRetriever(Retriever):
     def _load_encoder(self, model_name: str) -> SentenceEncoder:
         # Load encoder
         assert model_name in ENCODER_COLLECTION, f"Unknown encoder: {model_name}"
-        if "mUSE" in model_name:
+        if "mUSE" in model_name or "CL_ReLKT" in model_name:
             encoder = mUSESentenceEncoder(model_name)
         elif "mE5" in model_name:
             encoder = mE5SentenceEncoder(model_name)

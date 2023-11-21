@@ -72,14 +72,14 @@ class RetrievalBenchmark:
             "R@1000": metrics.get_recall(k=1000),
         }
     
-    def evaluate_on_datasets(self, dataset_names: List[str]):
-        for dataset_name in dataset_names:
+    def evaluate_on_datasets(self, dataset_names: List[str], corpus_names: List[str]):
+        for dataset_name, corpus_name in zip(dataset_names, corpus_names):
             # Get dataset path
             dataset_path = self._get_dataset_path(dataset_name)
             # Get qrels
             qrels = self.get_qrels(dataset_path)
             # Evaluate
-            results = self.evaluate_on_dataset(dataset_name, qrels)
+            results = self.evaluate_on_dataset(corpus_name, qrels)
             # Report results
             print("*" * 50)
             print(f"Dataset: {dataset_name.upper()}")
@@ -165,10 +165,10 @@ class OpenedBookQABenchmark(ClosedBookQABenchmark):
             question = qrel["question"]
             gold_answer = qrel["answer"][0]
 
-            topk_results = self.retriever(corpus_name, query=question, top_k=1)
-            retrieved_doc_id = [result["id"] for result in topk_results][0]
+            topk_results = self.retriever(corpus_name, query=question, top_k=5)
+            retrieved_doc_ids = [result["id"] for result in topk_results]
 
-            pred_context = corpus[retrieved_doc_id]
+            pred_context = "\n".join([corpus[retrieved_doc_id] for retrieved_doc_id in retrieved_doc_ids])
             pred_answer = self.extractor(question, pred_context)
 
             metrics.preds.append(pred_answer)
