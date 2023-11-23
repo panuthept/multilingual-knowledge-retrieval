@@ -16,8 +16,8 @@ ENCODER_COLLECTION = {
         "zip_file": True,
     },
     "CL_ReLKT": {
-        "local_dir": "models/student_best_supported_languages",
-        "file_name": "student_best_supported_languages",
+        "local_dir": "models/CL_ReLKT",
+        "file_name": "CL_ReLKT",
         "download_method": None,
         "download_url": None,
         "download_output": None,
