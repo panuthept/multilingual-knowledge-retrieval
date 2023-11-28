@@ -3,6 +3,7 @@ import math
 import json
 import Levenshtein
 from tqdm import tqdm
+from pathlib import Path
 from typing import Dict, List
 from dataclasses import dataclass, field
 from mkr.retrievers.baseclass import Retriever
@@ -38,10 +39,10 @@ class RetrievalBenchmark:
     def _get_dataset_path(self, dataset_name: str):
         return self.resource_management.get_dataset_path(dataset_name, dataset_type="retrieval")
 
-    def get_qrels(self, dataset_path: str):
+    def get_qrels(self, dataset_path: str, split: str = "test"):
         # Load qrels
         qrels = []
-        with open(os.path.join(dataset_path, "qrel_test.jsonl"), "r", encoding="utf-8") as f:
+        with open(os.path.join(dataset_path, f"{split}_qrels.jsonl"), "r", encoding="utf-8") as f:
             for line in f:
                 qrels.append(json.loads(line))
         return qrels
@@ -51,7 +52,7 @@ class RetrievalBenchmark:
         metrics = RetrievalMetrics()
         for qrel in tqdm(qrels, desc="Evaluating"):
             question = qrel["question"]
-            gold_document_ids = set(qrel["document_ids"])
+            gold_document_ids = set(qrel["context_ids"])
 
             topk_results = self.retriever(corpus_name, query=question, top_k=1000)
             retrieved_doc_ids = [result["id"] for result in topk_results]
@@ -72,12 +73,17 @@ class RetrievalBenchmark:
             "R@1000": metrics.get_recall(k=1000),
         }
     
-    def evaluate_on_datasets(self, dataset_names: List[str], corpus_names: List[str]):
-        for dataset_name, corpus_name in zip(dataset_names, corpus_names):
+    def evaluate_on_datasets(self, corpus_names: List[str], dataset_names_or_paths: List[str], split: str = "test"):
+        for dataset_name_or_path, corpus_name in zip(dataset_names_or_paths, corpus_names):
             # Get dataset path
-            dataset_path = self._get_dataset_path(dataset_name)
+            if Path(dataset_name_or_path).exists() and Path(dataset_name_or_path).is_dir():
+                dataset_name = Path(dataset_name_or_path).name
+                dataset_path = dataset_name_or_path
+            else:
+                dataset_name = dataset_name_or_path
+                dataset_path = self._get_dataset_path(dataset_name)
             # Get qrels
-            qrels = self.get_qrels(dataset_path)
+            qrels = self.get_qrels(dataset_path, split=split)
             # Evaluate
             results = self.evaluate_on_dataset(corpus_name, qrels)
             # Report results

@@ -8,12 +8,10 @@ from mkr.resources.resource_manager import ResourceManager
 
 
 class mE5SentenceEncoder(SentenceEncoder):
-    def __init__(self, model_name: str = "mE5_base"):
-        assert model_name in self.available_models, f"Unknown model name: {model_name}"
-
+    def __init__(self, model_checkpoint: str):
         self.resource_manager = ResourceManager()
-        self.tokenizer = AutoTokenizer.from_pretrained(self.resource_manager.get_encoder_path(model_name))
-        self.model = AutoModel.from_pretrained(self.resource_manager.get_encoder_path(model_name))
+        self.tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+        self.model = AutoModel.from_pretrained(model_checkpoint)
         self.model.eval()
 
         # Use GPU if available
@@ -47,16 +45,12 @@ class mE5SentenceEncoder(SentenceEncoder):
         passages = [f"passage: {passage}" for passage in passages]
         return self._encode(passages).detach()
     
-    @property
-    def available_models(self):
-        return ["mE5_base", "mE5_small", "mE5_large"]
-    
 
-if __name__ == "__main__":
-    encoder = mE5SentenceEncoder("mE5_small")
+# if __name__ == "__main__":
+#     encoder = mE5SentenceEncoder("mE5_small")
 
-    english_sentences = ["dog", "Puppies are nice.", "I enjoy taking long walks along the beach with my dog."]
-    en_emb = encoder.encode_queries(english_sentences)
-    print(en_emb.shape)
-    en_emb = encoder.encode_passages(english_sentences)
-    print(en_emb.shape)
+#     english_sentences = ["dog", "Puppies are nice.", "I enjoy taking long walks along the beach with my dog."]
+#     en_emb = encoder.encode_queries(english_sentences)
+#     print(en_emb.shape)
+#     en_emb = encoder.encode_passages(english_sentences)
+#     print(en_emb.shape)

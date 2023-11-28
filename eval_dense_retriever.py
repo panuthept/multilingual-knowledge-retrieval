@@ -7,6 +7,7 @@ from mkr.retrievers.dense_retriever import DenseRetriever, DenseRetrieverConfig
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="mUSE")
+    parser.add_argument("--model_checkpoint", type=str, default=None)
     parser.add_argument("--batch_size", type=int, default=32)
     args = parser.parse_args()
 
@@ -24,17 +25,34 @@ if __name__ == "__main__":
     doc_retrieval = DenseRetriever(
         DenseRetrieverConfig(
             model_name=args.model_name,
-            database_path=f"./database/{args.model_name}",
+            model_checkpoint=args.model_checkpoint,
+            database_path=f"./database/{args.model_name}/{args.model_checkpoint}",
         ),
     )
-    doc_retrieval.add_corpus("th_xquad", "./corpus/xquad/th_corpus.jsonl", batch_size=args.batch_size)
-    doc_retrieval.add_corpus("en_xquad", "./corpus/xquad/en_corpus.jsonl", batch_size=args.batch_size)
+    # doc_retrieval.add_corpus("iapp_wiki_qa", "./datasets/thai_retrieval/iapp_wiki_qa/corpus.jsonl", batch_size=args.batch_size)
+    # doc_retrieval.add_corpus("miracl", "./datasets/thai_retrieval/miracl/corpus.jsonl", batch_size=args.batch_size)
+    doc_retrieval.add_corpus("thaiqa_squad", "./datasets/thai_retrieval/thaiqa_squad/corpus.jsonl", batch_size=args.batch_size)
+    # doc_retrieval.add_corpus("tydiqa", "./datasets/thai_retrieval/tydiqa/corpus.jsonl", batch_size=args.batch_size)
+    # doc_retrieval.add_corpus("xquad", "./datasets/thai_retrieval/xquad/corpus.jsonl", batch_size=args.batch_size)
 
     # Prepare benchmark
     benchmark = RetrievalBenchmark(
         resource_management=ResourceManager(),
         retriever=doc_retrieval)
     benchmark.evaluate_on_datasets(
-        dataset_names=["th_xquad", "en_xquad", "th_en_xquad", "en_th_xquad"],
-        corpus_names=["th_xquad", "en_xquad", "en_xquad", "th_xquad"],
+        corpus_names=[
+            # "iapp_wiki_qa", 
+            # "miracl", 
+            "thaiqa_squad", 
+            # "tydiqa",
+            # "xquad",
+        ],
+        dataset_names_or_paths=[
+            # "./datasets/thai_retrieval/iapp_wiki_qa",
+            # "./datasets/thai_retrieval/miracl",
+            "./datasets/thai_retrieval/thaiqa_squad",
+            # "./datasets/thai_retrieval/tydiqa",
+            # "./datasets/thai_retrieval/xquad",
+        ],
+        split="test"
     )

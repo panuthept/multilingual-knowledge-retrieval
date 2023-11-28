@@ -10,18 +10,30 @@ if __name__ == "__main__":
             database_path="./database/BM25",
         ),
     )
-    doc_retrieval.add_corpus("th_xquad", "./corpus/xquad/th_corpus.jsonl")
-    doc_retrieval.add_corpus("en_xquad", "./corpus/xquad/en_corpus.jsonl")
-    # doc_retrieval.add_corpus("iapp_wiki_qa", "./corpus/iapp_wiki_qa/corpus.jsonl")
-    # doc_retrieval.add_corpus("tydiqa", "./corpus/tydiqa/corpus.jsonl")
-    # doc_retrieval.add_corpus("xquad", "./corpus/xquad/corpus.jsonl")
-    # doc_retrieval.add_corpus("miracl", "./corpus/miracl/corpus.jsonl")
+    doc_retrieval.add_corpus("iapp_wiki_qa", "./datasets/thai_retrieval/iapp_wiki_qa/corpus.jsonl")
+    doc_retrieval.add_corpus("miracl", "./datasets/thai_retrieval/miracl/corpus.jsonl")
+    doc_retrieval.add_corpus("thaiqa_squad", "./datasets/thai_retrieval/thaiqa_squad/corpus.jsonl")
+    doc_retrieval.add_corpus("tydiqa", "./datasets/thai_retrieval/tydiqa/corpus.jsonl")
+    doc_retrieval.add_corpus("xquad", "./datasets/thai_retrieval/xquad/corpus.jsonl")
 
     # Prepare benchmark
     benchmark = RetrievalBenchmark(
         resource_management=ResourceManager(),
         retriever=doc_retrieval)
     benchmark.evaluate_on_datasets(
-        dataset_names=["th_xquad", "en_xquad", "th_en_xquad", "en_th_xquad"],
-        corpus_names=["th_xquad", "en_xquad", "en_xquad", "th_xquad"],
+        corpus_names=[
+            "iapp_wiki_qa", 
+            "miracl", 
+            "thaiqa_squad", 
+            "tydiqa",
+            "xquad",
+        ],
+        dataset_names_or_paths=[
+            "./datasets/thai_retrieval/iapp_wiki_qa",
+            "./datasets/thai_retrieval/miracl",
+            "./datasets/thai_retrieval/thaiqa_squad",
+            "./datasets/thai_retrieval/tydiqa",
+            "./datasets/thai_retrieval/xquad",
+        ],
+        split="test"
     )

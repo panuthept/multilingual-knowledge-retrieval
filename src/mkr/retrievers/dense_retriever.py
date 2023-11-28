@@ -10,6 +10,7 @@ from mkr.utilities.general_utils import read_corpus
 from mkr.models.retrieval.mE5 import mE5SentenceEncoder
 from mkr.models.retrieval.mUSE import mUSESentenceEncoder
 from mkr.models.retrieval.mDPR import mDPRSentenceEncoder
+from mkr.resources.resource_manager import ResourceManager
 from mkr.models.retrieval.baseclass import SentenceEncoder
 from mkr.resources.resource_constant import ENCODER_COLLECTION
 from mkr.models.retrieval.mContriever import mContrieverSentenceEncoder
@@ -19,27 +20,32 @@ from mkr.models.retrieval.mContriever import mContrieverSentenceEncoder
 class DenseRetrieverConfig:
     model_name: str
     database_path: str
+    model_checkpoint: str = None
 
 
 class DenseRetriever(Retriever):
     def __init__(self, config: DenseRetrieverConfig):
         self.model_name = config.model_name
+        self.model_checkpoint = config.model_checkpoint
         self.database_path = config.database_path
 
-        self.encoder: SentenceEncoder = self._load_encoder(self.model_name)
+        self.resource_manager = ResourceManager()
+
+        self.encoder: SentenceEncoder = self._load_encoder(self.model_name, self.model_checkpoint)
         self.vector_db = VectorDB(self.database_path)
 
-    def _load_encoder(self, model_name: str) -> SentenceEncoder:
+    def _load_encoder(self, model_name: str, model_checkpoint: str = None) -> SentenceEncoder:
         # Load encoder
-        assert model_name in ENCODER_COLLECTION, f"Unknown encoder: {model_name}"
-        if "mUSE" in model_name or "CL_ReLKT" in model_name:
-            encoder = mUSESentenceEncoder(model_name)
-        elif "mE5" in model_name:
-            encoder = mE5SentenceEncoder(model_name)
-        elif "mContriever" in model_name:
-            encoder = mContrieverSentenceEncoder(model_name)
-        elif "mDPR" in model_name:
-            encoder = mDPRSentenceEncoder(model_name)
+        # assert model_name in ENCODER_COLLECTION, f"Unknown encoder: {model_name}"
+        model_checkpoint = model_checkpoint if model_checkpoint is not None else self.resource_manager.get_encoder_path(model_name)
+        if model_name == "mUSE":
+            encoder = mUSESentenceEncoder(model_checkpoint)
+        elif model_name == "mE5":
+            encoder = mE5SentenceEncoder(model_checkpoint)
+        elif model_name == "mContriever":
+            encoder = mContrieverSentenceEncoder(model_checkpoint)
+        elif model_name == "mDPR":
+            encoder = mDPRSentenceEncoder(model_checkpoint)
         else:
             raise ValueError(f"Unknown encoder: {model_name}")
         return encoder
@@ -53,11 +59,12 @@ class DenseRetriever(Retriever):
         for batch_idx in trange(math.ceil(len(corpus) / batch_size)):
             batch_corpus = corpus[batch_idx * batch_size: (batch_idx + 1) * batch_size]
             # Encode batch
-            batch_ids = [doc["hash"] for doc in batch_corpus]
+            batch_ids = [doc["id"] for doc in batch_corpus]
             batch_contents = [doc["content"] for doc in batch_corpus]
-            batch_metadata = [doc["metadata"] for doc in batch_corpus]
-            batch_titles = [metadata["title"] if "title" in metadata else None for metadata in batch_metadata]
-            batch_contents = [f"{title}\n{content}" if title is not None else content for title, content in zip(batch_titles, batch_contents)]
+            batch_metadata = [None for doc in batch_corpus]
+            # batch_metadata = [doc["metadata"] for doc in batch_corpus]
+            # batch_titles = [metadata["title"] if "title" in metadata else None for metadata in batch_metadata]
+            # batch_contents = [f"{title}\n{content}" if title is not None else content for title, content in zip(batch_titles, batch_contents)]
             batch_embeddings = self.encoder.encode_passages(batch_contents)
             # Add to database
             vector_collection.add(

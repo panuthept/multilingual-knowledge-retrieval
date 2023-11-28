@@ -38,7 +38,7 @@ def load_tydiqa_primary_data(split="train", corpus_index=None):
             context_hash = contexts[sub_content_idx]["hash"]
             qrels[question].add(context_hash)
 
-    lst_qrels = [{"question": question, "context": context_hashes} for question, context_hashes in qrels.items()]
+    lst_qrels = [{"question": question, "context": list(context_hashes)} for question, context_hashes in qrels.items()]
     return corpus_index, lst_qrels
 
 
@@ -58,7 +58,7 @@ def load_iappwikiqa_data(corpus_index=None):
             question = qa["q"]
             qrels[question].add(context_hash)
 
-    lst_qrels = [{"question": question, "context": context_hashes} for question, context_hashes in qrels.items()]
+    lst_qrels = [{"question": question, "context": list(context_hashes)} for question, context_hashes in qrels.items()]
     return corpus_index, lst_qrels
 
 
@@ -80,7 +80,7 @@ def load_miracl_data(split="train", corpus_index=None):
             context_hash = sha256(positive_context["text"].encode('utf-8')).hexdigest()
             qrels[question].add(context_hash)
 
-    lst_qrels = [{"question": question, "context": context_hashes} for question, context_hashes in qrels.items()]
+    lst_qrels = [{"question": question, "context": list(context_hashes)} for question, context_hashes in qrels.items()]
     return corpus_index, lst_qrels
 
 
@@ -97,7 +97,7 @@ def load_xquad_data(corpus_index=None):
         question = sample["question"]
         qrels[question].add(context_hash)
 
-    lst_qrels = [{"question": question, "context": context_hashes} for question, context_hashes in qrels.items()]
+    lst_qrels = [{"question": question, "context": list(context_hashes)} for question, context_hashes in qrels.items()]
     return corpus_index, lst_qrels
 
 
@@ -117,7 +117,7 @@ def load_thaiqa_squad_data(split="train", corpus_index=None):
         question = sample["question"]
         qrels[question].add(context_hash)
 
-    lst_qrels = [{"question": question, "context": context_hashes} for question, context_hashes in qrels.items()]
+    lst_qrels = [{"question": question, "context": list(context_hashes)} for question, context_hashes in qrels.items()]
     return corpus_index, lst_qrels
 
 
@@ -136,105 +136,74 @@ def load_thaiqa_lst20_data(corpus_index=None):
         question = sample["question"]
         qrels[question].add(context_hash)
 
-    lst_qrels = [{"question": question, "context": context_hashes} for question, context_hashes in qrels.items()]
+    lst_qrels = [{"question": question, "context": list(context_hashes)} for question, context_hashes in qrels.items()]
     return corpus_index, lst_qrels
 
 
-if __name__ == "__main__":
-    # Initial variables
-    corpus_index = None
-    all_train_qrels = [] 
-    all_dev_qrels = []
-    all_test_qrels = []
-
-    # # Load corpus and qrels
-    corpus_index, train_qrels = load_tydiqa_primary_data(split="train", corpus_index=corpus_index)
-    corpus_index, test_qrels = load_tydiqa_primary_data(split="validation", corpus_index=corpus_index)
-    train_qrels, dev_qrels = train_qrels[:int(len(train_qrels) * 0.9)], train_qrels[int(len(train_qrels) * 0.9):]
-    all_train_qrels += train_qrels
-    all_dev_qrels += dev_qrels
-    all_test_qrels += test_qrels
-    print(f"tydiqa_primary: train={len(train_qrels)}, dev={len(dev_qrels)}, test={len(test_qrels)}")
-
-    corpus_index, qrels = load_iappwikiqa_data(corpus_index=corpus_index)
-    train_qrels = qrels[:int(len(qrels) * 0.8)]
-    dev_qrels = qrels[int(len(qrels) * 0.8):int(len(qrels) * 0.9)]
-    test_qrels = qrels[int(len(qrels) * 0.9):]
-    all_train_qrels += train_qrels
-    all_dev_qrels += dev_qrels
-    all_test_qrels += test_qrels
-    print(f"iappwikiqa: train={len(train_qrels)}, dev={len(dev_qrels)}, test={len(test_qrels)}")
-
-    corpus_index, train_qrels = load_miracl_data(split="train", corpus_index=corpus_index)
-    corpus_index, test_qrels = load_miracl_data(split="dev", corpus_index=corpus_index)
-    train_qrels, dev_qrels = train_qrels[:int(len(train_qrels) * 0.9)], train_qrels[int(len(train_qrels) * 0.9):]
-    all_train_qrels += train_qrels
-    all_dev_qrels += dev_qrels
-    all_test_qrels += test_qrels
-    print(f"miracl: train={len(train_qrels)}, dev={len(dev_qrels)}, test={len(test_qrels)}")
-
-    corpus_index, test_qrels = load_xquad_data(corpus_index=corpus_index)
-    all_test_qrels += test_qrels
-    print(f"xquad: test={len(test_qrels)}")
-
-    corpus_index, train_qrels = load_thaiqa_squad_data(split="train", corpus_index=corpus_index)
-    corpus_index, test_qrels = load_thaiqa_squad_data(split="validation", corpus_index=corpus_index)
-    train_qrels, dev_qrels = train_qrels[:int(len(train_qrels) * 0.9)], train_qrels[int(len(train_qrels) * 0.9):]
-    all_train_qrels += train_qrels
-    all_dev_qrels += dev_qrels
-    all_test_qrels += test_qrels
-    print(f"thaiqa_squad: train={len(train_qrels)}, dev={len(dev_qrels)}, test={len(test_qrels)}")
-
-    corpus_index, train_qrels = load_thaiqa_lst20_data(corpus_index=corpus_index)
-    train_qrels, dev_qrels = train_qrels[:int(len(train_qrels) * 0.9)], train_qrels[int(len(train_qrels) * 0.9):]
-    all_train_qrels += train_qrels
-    all_dev_qrels += dev_qrels
-    print(f"thaiqa_lst20: train={len(train_qrels)}, dev={len(dev_qrels)}")
-
-    # Indexing corpus
+def save_dataset(name, save_path, corpus_index, train_qrels=None, dev_qrels=None, test_qrels=None):
     corpus_hash2id = {}
     for hash in corpus_index.keys():
         corpus_hash2id[hash] = len(corpus_hash2id)
-    print(f"Corpus size: {len(corpus_index)}")
 
-    # Unique questions
-    unique_train_qrels = defaultdict(set)
-    for qrel in all_train_qrels:
-        unique_train_qrels[qrel["question"]].update(qrel["context"])
-    unique_train_qrels = [{"question": question, "context_ids": [corpus_hash2id[context_hash] for context_hash in context_hashes]} for question, context_hashes in unique_train_qrels.items()]
-    
-    unique_dev_qrels = defaultdict(set)
-    for qrel in all_dev_qrels:
-        unique_dev_qrels[qrel["question"]].update(qrel["context"])
-    unique_dev_qrels = [{"question": question, "context_ids": [corpus_hash2id[context_hash] for context_hash in context_hashes]} for question, context_hashes in unique_dev_qrels.items()]
-    
-    unique_test_qrels = defaultdict(set)
-    for qrel in all_test_qrels:
-        unique_test_qrels[qrel["question"]].update(qrel["context"])
-    unique_test_qrels = [{"question": question, "context_ids": [corpus_hash2id[context_hash] for context_hash in context_hashes]} for question, context_hashes in unique_test_qrels.items()]
-    
-    print(f"Training size: {len(unique_train_qrels)}")
-    print(f"Development size: {len(unique_dev_qrels)}")
-    print(f"Test size: {len(unique_test_qrels)}")
+    print(name)
+    print(f"Corpus size: {len(corpus_index)}, Train: {len(train_qrels)}, Dev: {len(dev_qrels)}, Test: {len(test_qrels)}")
 
-    # Save to file
-    os.makedirs("./datasets/thai_retrieval", exist_ok=True)
-    with open("./datasets/thai_retrieval/train_qrels.jsonl", "w", encoding="utf-8") as f:
-        for qrel in unique_train_qrels:
-            f.write(json.dumps(qrel, ensure_ascii=False))
-            f.write("\n")
-
-    with open("./datasets/thai_retrieval/dev_qrels.jsonl", "w", encoding="utf-8") as f:
-        for qrel in unique_dev_qrels:
-            f.write(json.dumps(qrel, ensure_ascii=False))
-            f.write("\n")
-
-    with open("./datasets/thai_retrieval/test_qrels.jsonl", "w", encoding="utf-8") as f:
-        for qrel in unique_test_qrels:
-            f.write(json.dumps(qrel, ensure_ascii=False))
-            f.write("\n")
-
-    with open("./datasets/thai_retrieval/corpus.json", "w", encoding="utf-8") as f:
+    os.makedirs(save_path, exist_ok=True)
+    with open(f"{save_path}/corpus.json", "w", encoding="utf-8") as f:
         for hash, context in corpus_index.items():
             f.write(json.dumps({"id": corpus_hash2id[hash], "content": context}, ensure_ascii=False))
             f.write("\n")
+    if train_qrels:
+        train_qrels = [{"question": qrel["question"], "context_ids": [corpus_hash2id[context_hash] for context_hash in qrel["context"]]} for qrel in train_qrels]
+        with open(f"{save_path}/train_qrels.jsonl", "w", encoding="utf-8") as f:
+            for qrel in train_qrels:
+                f.write(json.dumps(qrel, ensure_ascii=False))
+                f.write("\n")
+    if dev_qrels:
+        dev_qrels = [{"question": qrel["question"], "context_ids": [corpus_hash2id[context_hash] for context_hash in qrel["context"]]} for qrel in dev_qrels]
+        with open(f"{save_path}/dev_qrels.jsonl", "w", encoding="utf-8") as f:
+            for qrel in dev_qrels:
+                f.write(json.dumps(qrel, ensure_ascii=False))
+                f.write("\n")
+    if test_qrels:
+        test_qrels = [{"question": qrel["question"], "context_ids": [corpus_hash2id[context_hash] for context_hash in qrel["context"]]} for qrel in test_qrels]
+        with open(f"{save_path}/test_qrels.jsonl", "w", encoding="utf-8") as f:
+            for qrel in test_qrels:
+                f.write(json.dumps(qrel, ensure_ascii=False))
+                f.write("\n")
+
+
+if __name__ == "__main__":
+    # Load corpus and qrels
+    corpus_index, train_qrels = load_tydiqa_primary_data(split="train")
+    corpus_index, test_qrels = load_tydiqa_primary_data(split="validation", corpus_index=corpus_index)
+    train_qrels, dev_qrels = train_qrels[:int(len(train_qrels) * 0.9)], train_qrels[int(len(train_qrels) * 0.9):]
+    save_dataset("tydiqa", "./datasets/thai_retrieval/tydiqa", corpus_index, train_qrels, dev_qrels, test_qrels)
+
+    corpus_index, qrels = load_iappwikiqa_data()
+    train_qrels = qrels[:int(len(qrels) * 0.8)]
+    dev_qrels = qrels[int(len(qrels) * 0.8):int(len(qrels) * 0.9)]
+    test_qrels = qrels[int(len(qrels) * 0.9):]
+    save_dataset("iapp_wiki_qa", "./datasets/thai_retrieval/iapp_wiki_qa", corpus_index, train_qrels, dev_qrels, test_qrels)
+
+    corpus_index, train_qrels = load_miracl_data(split="train")
+    corpus_index, test_qrels = load_miracl_data(split="dev", corpus_index=corpus_index)
+    train_qrels, dev_qrels = train_qrels[:int(len(train_qrels) * 0.9)], train_qrels[int(len(train_qrels) * 0.9):]
+    save_dataset("miracl", "./datasets/thai_retrieval/miracl", corpus_index, train_qrels, dev_qrels, test_qrels)
+
+    corpus_index, qrels = load_xquad_data()
+    train_qrels = qrels[:int(len(qrels) * 0.8)]
+    dev_qrels = qrels[int(len(qrels) * 0.8):int(len(qrels) * 0.9)]
+    test_qrels = qrels[int(len(qrels) * 0.9):]
+    save_dataset("xquad", "./datasets/thai_retrieval/xquad", corpus_index, train_qrels, dev_qrels, test_qrels)
+
+    corpus_index, train_qrels = load_thaiqa_squad_data(split="train")
+    corpus_index, test_qrels = load_thaiqa_squad_data(split="validation", corpus_index=corpus_index)
+    train_qrels, dev_qrels = train_qrels[:int(len(train_qrels) * 0.9)], train_qrels[int(len(train_qrels) * 0.9):]
+    save_dataset("thaiqa_squad", "./datasets/thai_retrieval/thaiqa_squad", corpus_index, train_qrels, dev_qrels, test_qrels)
+
+    corpus_index, qrels = load_thaiqa_lst20_data()
+    train_qrels = qrels[:int(len(qrels) * 0.8)]
+    dev_qrels = qrels[int(len(qrels) * 0.8):int(len(qrels) * 0.9)]
+    test_qrels = qrels[int(len(qrels) * 0.9):]
+    save_dataset("thaiqa_lst20", "./datasets/thai_retrieval/thaiqa_lst20", corpus_index, train_qrels, dev_qrels, test_qrels)
